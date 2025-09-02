@@ -25,15 +25,7 @@ function LANFINGPAGEMAIN() {
       <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once: true }}>
         <QueOfrecemos />
       </motion.div>
-
-      <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-        <Estadisticas />
-      </motion.div>
-
-      <motion.div variants={fadeIn} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-        <Ubicacion />
-      </motion.div>
-
+      <br></br>
       
     </>
   );

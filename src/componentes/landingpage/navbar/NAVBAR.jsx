@@ -10,7 +10,7 @@ const Navbar = () => {
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark" style={{
-    backgroundColor: '#ff3b3b',
+    backgroundColor: '#342683ff',
     paddingTop: '0',
     paddingBottom: '0'
   }}
@@ -22,10 +22,8 @@ const Navbar = () => {
     alt="Logo"
     className="d-inline-block align-text-top"
     style={{
-      objectFit: "cover",       // Ensures the image fills the container
       objectPosition: "center", // Vertically centers the cropped area
       height: "80px",           // Adjust height as needed
-      width: "150px",            // Keeps aspect ratio
       overflow: "hidden",       // Ensures cropped content is hidden
       borderRadius: "4px"       // Optional: adds subtle rounding
     }}

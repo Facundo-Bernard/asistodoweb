@@ -45,11 +45,11 @@ const HeroCarousel = () => {
 
               {/* Recuadro blanco con contenido */}
               <div className="content-box text-center p-4 rounded shadow" style={{ zIndex: 1 }}>
-                <h1 className="fw-bold text-dark mb-2">Cooperativa Ya</h1>
+                <h1 className="fw-bold text-dark mb-2">Asistodo</h1>
                 <p className="text-dark mb-3">
-                  Cooperativa de crédito, vivienda, consumo, servicios sociales y administrativos YA limitada. 
+                  Ofrecimiento de servicios multiasistencia por todo el pais. Listos para asistirte 24/7
                 </p>
-                <Link to="/servicios" className="btn btn-outline-danger">
+                <Link to="/servicios" className="btn btn btn-outline-primary">
                   Ver nuestros servicios
                 </Link>
               </div>

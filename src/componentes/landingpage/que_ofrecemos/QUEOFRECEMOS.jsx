@@ -4,30 +4,33 @@ import ServicioItem from './ServicioItem';
 const QueOfrecemos = () => {
   const servicios = [
     {
-      title: 'Title',
-      description: "Body text for whatever you'd like to say. Add main takeaway points, quotes, anecdotes, or even a very very short story.",
+      title: 'Asistencia en el hogar',
+      description: "Servicios dedicados a la asistencia en el hogar, como plomero, gasista, cerrajeria o electricista de emergencia",
     },
     // Puedes duplicar o cambiar más ítems
     {
-      title: 'Title',
-      description: "Body text for whatever you'd like to say. Add main takeaway points, quotes, anecdotes, or even a very very short story.",
+      title: 'Asistencia al viajero',
+      description: "Asistencia al viajero nacional y paises limitros. Incluye desde asistencia medica por accidentes deportivos, atencion a embarazadas, asistencia frente a robo de billetera/documentos entre otros",
     },
     {
-      title: 'Title',
-      description: "Body text for whatever you'd like to say. Add main takeaway points, quotes, anecdotes, or even a very very short story.",
+      title: 'Asistencia medica',
+      description: "Servicios de asistencia y cuidado medico, desde traslado por ambulancia, consulta de segunda opinion, medico a domicilio, linea de consultas hasta recordatorios de citas e ingesta de medicamentos",
+    },
+       {
+      title: 'Telemedicina',
+      description: "Video consultas medicas. El servicio consiste en la posinilidad de realizar una consulta virtual con un profesional de medicina familiar, pediatria, clinica",
+    },
+    
+    {
+      title: 'Telepsicologia',
+      description: "El servicio consiste en la posibilidad de que el asociado, asi como familiares directos realicen una consulta de caracter virtual con un profesional de la salud en la especialidad de psicologia",
     },
     {
-      title: 'Title',
-      description: "Body text for whatever you'd like to say. Add main takeaway points, quotes, anecdotes, or even a very very short story.",
+      title: 'Premium transfers',
+      description: "distintos tipos de subsidios con la oportunidad de tomar adelantadamente un subsidio de fallecimiento. Inlcuye traslado de fallecidos entre provincias limitrofes",
     },
-    {
-      title: 'Title',
-      description: "Body text for whatever you'd like to say. Add main takeaway points, quotes, anecdotes, or even a very very short story.",
-    },
-    {
-      title: 'Title',
-      description: "Body text for whatever you'd like to say. Add main takeaway points, quotes, anecdotes, or even a very very short story.",
-    },
+ 
+
   ];
 
   return (

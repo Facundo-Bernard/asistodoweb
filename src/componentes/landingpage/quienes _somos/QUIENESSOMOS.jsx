@@ -51,17 +51,14 @@ const QuienesSomos = () => {
         {/* Texto a la derecha */}
         <div className="col-md-6">
           <h2 className="fw-bold">Sobre nosotros</h2>
-          <h5 className="text-muted">cooperativa ya</h5>
+          <h5 className="text-muted">Asistodo</h5>
           <p className="mt-3 text-secondary">
-            Mucho más que un préstamo…
-            COOP YA la Cooperativa número 1 del País.
-            En muchas provincias conocida con su nombre de fantasía CREDIYA.
-            Encontra los servicios que necesitas y si no contanos cuales son, estamos para servirte.
-            Es nuestro compromiso satisfacer todas tus necesidades.
+            Somos una empresa dedicada a brindar servicios de calidad, desde asistencia medica, asistencia en el hogar, video consultas medicas hasta subsidios por casamiento, los invitamos a ver nuestro apartado de servicios para conocer aun mas sobre todo lo que tenemos para ofrecer
+
           </p>
           <p className="mt-3 text-secondary">      
-            Felicitamos a TODOS los Asociados que se suman a esta hermosa familia, que participan de manera activa en las Asambleas y aportan nuevas iniciativas para seguir creciendo. Gracias por elegirnos.
-            Todos somos responsables de mantener viva la entidad, tu voto suma a las decisiones. Todos somos iguales, cada uno de los socios sin importar condición alguna tiene derecho a un voto.
+            
+            Contamos con mas de 10 años de experiencia brindando servicio de multiasistencia en todo el pais. Nos caracterizamos por responder en tiempo y forma con servicios flexibles y ajustados a las necesidades de  nuestros clientes, representando la mejor relacion costo-beneficio.
           </p>
         </div>
       </div>

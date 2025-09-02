@@ -9,27 +9,79 @@ const SERVICIOS = () => {
   const servicios = [
     {
       icon: "🏠",
-      title: "Vivienda",
-      desc: "Soluciones habitacionales accesibles y solidarias para nuestros miembros.",
+      title: "Pack Classic",
+      desc: "Nuestro plan estandar, focalizado en la asistencia y ayuda",
+      // Soportamos tanto un simple array `beneficios` (retrocompatibilidad)
+      // como múltiples contenedores `beneficiosListas` con nombre y items.
       beneficios: [
         "Planes de ahorro para vivienda",
         "Acceso a créditos hipotecarios cooperativos",
         "Asesoramiento legal y técnico",
       ],
-      testimonios: [
-        "“Gracias a la cooperativa, hoy tengo mi casa propia.” – Marta G.",
-        "“El acompañamiento fue clave en todo el proceso.” – Luis R.",
+      beneficiosListas: [
+        {
+          name: "Asistencia al HOGAR",
+          items: [
+            "Plomeria, Gasista, Vidrieria, Cerrajeria, Electricista de emergencia",
+            "Orientacion legal Telefonica en casos de robo en el domiciio",
+            "Rerencia y Coordinacion de tecnicos en mantenimiento",
+          ],
+        },
+        {
+          name: "Asistencia MEDICA",
+          items: [
+            "traslado terrestre (ambulancia) en caso de accidente o engermedad",
+            "Segunda opinion medica",
+            "Medico y enfermera a domicilio",
+            "Phono Med: Linea de consultas 24hs",
+            "Recordatorio de citas medicas e ingesta de medicamentos",
+            "Referencias medicas de especialidades, hospitales y clinicas a nivel nacional"
+          ],
+        },
+        {
+          name: "Asistencia en VIA PUBLICA",
+          items: [
+            "Traslado del beneficiario en Taxi o Remise",
+            "Traslado medico terrestre en caso de lesiones",
+            "Asistente telefonica para tramites administrativos",
+            "Cerrajero en caso de robo de llaves al domicilio",
+            "Envio de remolque en caso de robo de las llaves del auto",
+            "Coordinacion de denuncias de robo de tarjetas de credito y celular",
+            "Transmision de mensajes urgentes y conferencias telefonicas",
+            "Conexion con numeros de emrgencias",
+          ],
+        },
+        {
+          name: "Subsidio por Fallecimiento",
+          items: [
+            "OPCIONAL COBRO ANTICIPADO",
+            "colaborar con los gastos ant el requerimiento de un familiar directo",
+            "Presentando certificado de fallecimiento y documentacion que corrobore fehacientemente la relacion parental mas directa con el fallecido",
+
+          ],
+        },
       ],
+      // Testimonios: también soportamos arrays simples y listas con nombre.
+
       contacto: "/contacto/vivienda",
     },
     {
       icon: "🏠",
-      title: "Vivienda",
+      title: "Pack Gold",
       desc: "Soluciones habitacionales accesibles y solidarias para nuestros miembros.",
       beneficios: [
         "Planes de ahorro para vivienda",
         "Acceso a créditos hipotecarios cooperativos",
         "Asesoramiento legal y técnico",
+      ],
+      beneficiosListas: [
+        {
+          name: "Planes y Créditos",
+          items: [
+            "Planes de ahorro para vivienda",
+            "Acceso a créditos hipotecarios cooperativos",
+          ],
+        },
       ],
       testimonios: [
         "“Gracias a la cooperativa, hoy tengo mi casa propia.” – Marta G.",
@@ -39,16 +91,51 @@ const SERVICIOS = () => {
     },
     {
       icon: "💳",
-      title: "Crédito",
+      title: "Pack premium",
       desc: "Financiamiento responsable para proyectos personales y comunitarios.",
-      beneficios: [
-        "Tasas preferenciales para socios",
-        "Créditos para emprendimientos",
-        "Educación financiera personalizada",
+      beneficiosListas: [
+        {
+          name: "Tasas y Créditos",
+          items: [
+            "Tasas preferenciales para socios",
+            "Créditos para emprendimientos",
+            "Educación financiera personalizada",
+          ],
+        },
       ],
-      testimonios: [
-        "“Pude lanzar mi emprendimiento con su ayuda.” – Carla M.",
-        "“Transparencia y confianza en cada paso.” – Diego F.",
+      testimoniosListas: [
+        {
+          name: "Emprendedores",
+          items: [
+            "“Pude lanzar mi emprendimiento con su ayuda.” – Carla M.",
+            "“Transparencia y confianza en cada paso.” – Diego F.",
+          ],
+        },
+      ],
+      contacto: "/contacto/credito",
+    },
+    {
+      icon: "💳",
+      title: "Pack platinum",
+      desc: "Financiamiento responsable para proyectos personales y comunitarios.",
+      beneficiosListas: [
+        {
+          name: "Tasas y Créditos",
+          items: [
+            "Tasas preferenciales para socios",
+            "Créditos para emprendimientos",
+            "Educación financiera personalizada",
+          ],
+        },
+      ],
+      testimoniosListas: [
+        {
+          name: "Emprendedores",
+          items: [
+            "“Pude lanzar mi emprendimiento con su ayuda.” – Carla M.",
+            "“Transparencia y confianza en cada paso.” – Diego F.",
+          ],
+        },
       ],
       contacto: "/contacto/credito",
     },
@@ -72,6 +159,8 @@ const SERVICIOS = () => {
 
   return (
     <>
+      {/* Si utilizas Navbar/Footers en la página, puedes descomentarlos */}
+      {/* <Navbar /> */}
 
       <div className="container-fluid py-5 px-4" style={{ backgroundColor: "#ffffffff" }}>
         <motion.div
@@ -83,7 +172,10 @@ const SERVICIOS = () => {
           <div className="text-center mb-5">
             <h1 className="fw-bold  display-4">Nuestros Servicios</h1>
             <p className="lead text-secondary mx-auto" style={{ maxWidth: "700px" }}>
-              Cada servicio nace del compromiso con el bienestar colectivo. Soluciones que empoderan, conectan y transforman vidas.
+              Soluciones que empoderan, conectan y transforman vidas.
+            </p>
+            <p className="lead text-secondary mx-auto" style={{ maxWidth: "700px" }}>
+              ofrecemos los siguientes packs, que incluyen una variedad de servicios
             </p>
           </div>
 
@@ -117,24 +209,53 @@ const SERVICIOS = () => {
                         exit="exit"
                         className="mt-4 text-start"
                       >
-                        <h6 className="text-danger">Beneficios</h6>
-                        <ul className="text-secondary">
-                          {servicio.beneficios.map((b, i) => (
-                            <li key={i}>{b}</li>
-                          ))}
-                        </ul>
+                        {/* Beneficios: soporta múltiples contenedores con nombre */}
+                        {servicio.beneficiosListas && servicio.beneficiosListas.length > 0 ? (
+                          servicio.beneficiosListas.map((grupo, gIdx) => (
+                            <div key={`b-${gIdx}`} className="mb-3">
+                              <h6 className="text-danger">{grupo.name}</h6>
+                              <ul className="text-secondary">
+                                {grupo.items.map((b, i) => (
+                                  <li key={`b-${gIdx}-${i}`}>{b}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))
+                        ) : servicio.beneficios && servicio.beneficios.length > 0 ? (
+                          <div>
+                            <h6 className="text-danger">Beneficios</h6>
+                            <ul className="text-secondary">
+                              {servicio.beneficios.map((b, i) => (
+                                <li key={i}>{b}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
 
-                        <h6 className="text-danger mt-3">Testimonios</h6>
-                        <ul className="fst-italic text-secondary">
-                          {servicio.testimonios.map((t, i) => (
-                            <li key={i}>{t}</li>
-                          ))}
-                        </ul>
+                        {/* Testimonios: soporta múltiples contenedores con nombre */}
+                        {servicio.testimoniosListas && servicio.testimoniosListas.length > 0 ? (
+                          servicio.testimoniosListas.map((grupo, gIdx) => (
+                            <div key={`t-${gIdx}`} className="mb-3">
+                              <h6 className="text-danger mt-3">{grupo.name}</h6>
+                              <ul className="fst-italic text-secondary">
+                                {grupo.items.map((t, i) => (
+                                  <li key={`t-${gIdx}-${i}`}>{t}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          ))
+                        ) : servicio.testimonios && servicio.testimonios.length > 0 ? (
+                          <div>
+                            <h6 className="text-danger mt-3">Testimonios</h6>
+                            <ul className="fst-italic text-secondary">
+                              {servicio.testimonios.map((t, i) => (
+                                <li key={i}>{t}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : null}
 
-                        <a
-                          href={servicio.contacto}
-                          className="btn btn-danger mt-3"
-                        >
+                        <a href={servicio.contacto} className="btn btn-danger mt-3">
                           Contactar
                         </a>
                       </motion.div>
@@ -147,6 +268,7 @@ const SERVICIOS = () => {
         </motion.div>
       </div>
 
+      {/* <Footer /> */}
     </>
   );
 };

@@ -399,11 +399,15 @@ export default function ContactoForm() {
                                 <div className="d-flex flex-column gap-2">
                                     <div>
                                         <i className="bi bi-envelope me-2" aria-hidden="true" />
-                                        <a href="mailto:coopya@coopya.com.ar">coopya@coopya.com.ar</a>
+                                        <a href="mailto:coopya@coopya.com.ar">Asistodo@asistodo.com.ar</a>
                                     </div>
                                     <div>
                                         <i className="bi bi-telephone me-2" aria-hidden="true" />
-                                        <a href="tel:+541143288680">+54 11 4328-8680</a>
+                                        <a href="tel:+54115597-2976">+54 11 5597-2976</a>
+                                    </div>
+                                    <div>
+                                        <i className="bi bi-telephone me-2" aria-hidden="true" />
+                                        <a href="tel:+08103450576">0810-345-0576</a>
                                     </div>
                                     <div>
                                         <i className="bi bi-geo-alt me-2" aria-hidden="true" />
