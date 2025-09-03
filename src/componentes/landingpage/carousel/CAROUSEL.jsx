@@ -1,7 +1,7 @@
 import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { Link } from 'react-router-dom';
-import carousel2 from '../../../assets/LAVIDAEUNCAROUSEL2.png';
+import carousel2 from '../../../assets/asistodocover.jpg';
 import carousel1 from '../../../assets/LAVIDAEUNCAROUSEL.jpg';
 
 

@@ -44,14 +44,7 @@ const Navbar = () => {
 
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto align-items-center">
-            <li className="nav-item">
-              <button
-                className={`btn me-2 ${isActive("/quienes-somos") ? "btn-outline-light active" : "btn-light"}`}
-                onClick={() => navigate("/quienes-somos")}
-              >
-                ¿Quiénes somos?
-              </button>
-            </li>
+
             <br></br>
             <li className="nav-item">
               <Link

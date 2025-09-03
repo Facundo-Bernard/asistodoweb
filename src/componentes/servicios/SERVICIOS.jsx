@@ -13,11 +13,7 @@ const SERVICIOS = () => {
       desc: "Nuestro plan estandar, focalizado en la asistencia y ayuda",
       // Soportamos tanto un simple array `beneficios` (retrocompatibilidad)
       // como múltiples contenedores `beneficiosListas` con nombre y items.
-      beneficios: [
-        "Planes de ahorro para vivienda",
-        "Acceso a créditos hipotecarios cooperativos",
-        "Asesoramiento legal y técnico",
-      ],
+
       beneficiosListas: [
         {
           name: "Asistencia al HOGAR",
@@ -63,56 +59,147 @@ const SERVICIOS = () => {
       ],
       // Testimonios: también soportamos arrays simples y listas con nombre.
 
-      contacto: "/contacto/vivienda",
+      contacto: "/contactanos",
     },
-    {
-      icon: "🏠",
-      title: "Pack Gold",
-      desc: "Soluciones habitacionales accesibles y solidarias para nuestros miembros.",
-      beneficios: [
-        "Planes de ahorro para vivienda",
-        "Acceso a créditos hipotecarios cooperativos",
-        "Asesoramiento legal y técnico",
-      ],
-      beneficiosListas: [
-        {
-          name: "Planes y Créditos",
-          items: [
-            "Planes de ahorro para vivienda",
-            "Acceso a créditos hipotecarios cooperativos",
-          ],
-        },
-      ],
-      testimonios: [
-        "“Gracias a la cooperativa, hoy tengo mi casa propia.” – Marta G.",
-        "“El acompañamiento fue clave en todo el proceso.” – Luis R.",
-      ],
-      contacto: "/contacto/vivienda",
-    },
+
     {
       icon: "💳",
       title: "Pack premium",
       desc: "Financiamiento responsable para proyectos personales y comunitarios.",
       beneficiosListas: [
         {
-          name: "Tasas y Créditos",
+          name: "Asistencia al HOGAR",
           items: [
-            "Tasas preferenciales para socios",
-            "Créditos para emprendimientos",
-            "Educación financiera personalizada",
+            "Plomeria, Gasista, Vidrieria, Cerrajeria, Electricista de emergencia",
+            "Orientacion legal Telefonica en casos de robo en el domiciio",
+            "Rerencia y Coordinacion de tecnicos en mantenimiento",
           ],
         },
-      ],
-      testimoniosListas: [
         {
-          name: "Emprendedores",
+          name: "Asistencia MEDICA",
           items: [
-            "“Pude lanzar mi emprendimiento con su ayuda.” – Carla M.",
-            "“Transparencia y confianza en cada paso.” – Diego F.",
+            "traslado terrestre (ambulancia) en caso de accidente o engermedad",
+            "Segunda opinion medica",
+            "Medico y enfermera a domicilio",
+            "Phono Med: Linea de consultas 24hs",
+            "Recordatorio de citas medicas e ingesta de medicamentos",
+            "Referencias medicas de especialidades, hospitales y clinicas a nivel nacional"
           ],
         },
+        {
+          name: "Asistencia en VIA PUBLICA",
+          items: [
+            "Traslado del beneficiario en Taxi o Remise",
+            "Traslado medico terrestre en caso de lesiones",
+            "Asistente telefonica para tramites administrativos",
+            "Cerrajero en caso de robo de llaves al domicilio",
+            "Envio de remolque en caso de robo de las llaves del auto",
+            "Coordinacion de denuncias de robo de tarjetas de credito y celular",
+            "Transmision de mensajes urgentes y conferencias telefonicas",
+            "Conexion con numeros de emrgencias",
+          ],
+        },
+        {
+          name: "Premium Transfers",
+          items: [
+            "Traslados medicos programados para una segunda opinion medica especializada para el titular y un acompañante en vuelos de linea o via terrestre",
+
+          ],
+        },
+        {
+          name: "Subsidio por Fallecimiento",
+          items: [
+            "OPCIONAL COBRO ANTICIPADO",
+            "colaborar con los gastos ant el requerimiento de un familiar directo",
+            "Presentando certificado de fallecimiento y documentacion que corrobore fehacientemente la relacion parental mas directa con el fallecido",
+
+          ],
+        },
+        {
+          name: "VIP remove service",
+          items: [
+            "Traslado de fallecidos entre Provincias limitrofes del ultimo domicilio informado en el DNI, abarcando toda la Republica Argentina",
+
+          ],
+        },
+
+
       ],
-      contacto: "/contacto/credito",
+
+
+      contacto: "/contactanos"
+    },
+    {
+      icon: "🏠",
+      title: "Pack Gold",
+      desc: "Soluciones habitacionales accesibles y solidarias para nuestros miembros.",
+      beneficiosListas: [
+        {
+          name: "Asistencia al HOGAR",
+          items: [
+            "Plomeria, Gasista, Vidrieria, Cerrajeria, Electricista de emergencia",
+            "Orientacion legal Telefonica en casos de robo en el domiciio",
+            "Rerencia y Coordinacion de tecnicos en mantenimiento",
+          ],
+        },
+        {
+          name: "Asistencia MEDICA",
+          items: [
+            "traslado terrestre (ambulancia) en caso de accidente o engermedad",
+            "Segunda opinion medica",
+            "Medico y enfermera a domicilio",
+            "Phono Med: Linea de consultas 24hs",
+            "Recordatorio de citas medicas e ingesta de medicamentos",
+            "Referencias medicas de especialidades, hospitales y clinicas a nivel nacional"
+          ],
+        },
+        {
+          name: "Asistencia en VIA PUBLICA",
+          items: [
+            "Traslado del beneficiario en Taxi o Remise",
+            "Traslado medico terrestre en caso de lesiones",
+            "Asistente telefonica para tramites administrativos",
+            "Cerrajero en caso de robo de llaves al domicilio",
+            "Envio de remolque en caso de robo de las llaves del auto",
+            "Coordinacion de denuncias de robo de tarjetas de credito y celular",
+            "Transmision de mensajes urgentes y conferencias telefonicas",
+            "Conexion con numeros de emrgencias",
+          ],
+        },
+        {
+          name: "Premium Transfers",
+          items: [
+            "Traslados medicos programados para una segunda opinion medica especializada para el titular y un acompañante en vuelos de linea o via terrestre",
+
+          ],
+        },
+        {
+          name: "Subsidio por Fallecimiento",
+          items: [
+            "OPCIONAL COBRO ANTICIPADO",
+            "colaborar con los gastos ant el requerimiento de un familiar directo",
+            "Presentando certificado de fallecimiento y documentacion que corrobore fehacientemente la relacion parental mas directa con el fallecido",
+
+          ],
+        },
+        {
+          name: "VIP remove service",
+          items: [
+            "Traslado de fallecidos entre Provincias limitrofes del ultimo domicilio informado en el DNI, abarcando toda la Republica Argentina",
+
+          ],
+        },
+        {
+          name: "Telemedic",
+          items: [
+            "video consulta medica"
+          ],
+        },
+
+
+      ],
+
+      contacto: "/contactanos"
     },
     {
       icon: "💳",
@@ -120,24 +207,79 @@ const SERVICIOS = () => {
       desc: "Financiamiento responsable para proyectos personales y comunitarios.",
       beneficiosListas: [
         {
-          name: "Tasas y Créditos",
+          name: "Asistencia al HOGAR",
           items: [
-            "Tasas preferenciales para socios",
-            "Créditos para emprendimientos",
-            "Educación financiera personalizada",
+            "Plomeria, Gasista, Vidrieria, Cerrajeria, Electricista de emergencia",
+            "Orientacion legal Telefonica en casos de robo en el domiciio",
+            "Rerencia y Coordinacion de tecnicos en mantenimiento",
           ],
         },
-      ],
-      testimoniosListas: [
         {
-          name: "Emprendedores",
+          name: "Asistencia MEDICA",
           items: [
-            "“Pude lanzar mi emprendimiento con su ayuda.” – Carla M.",
-            "“Transparencia y confianza en cada paso.” – Diego F.",
+            "traslado terrestre (ambulancia) en caso de accidente o engermedad",
+            "Segunda opinion medica",
+            "Medico y enfermera a domicilio",
+            "Phono Med: Linea de consultas 24hs",
+            "Recordatorio de citas medicas e ingesta de medicamentos",
+            "Referencias medicas de especialidades, hospitales y clinicas a nivel nacional"
           ],
         },
+        {
+          name: "Asistencia en VIA PUBLICA",
+          items: [
+            "Traslado del beneficiario en Taxi o Remise",
+            "Traslado medico terrestre en caso de lesiones",
+            "Asistente telefonica para tramites administrativos",
+            "Cerrajero en caso de robo de llaves al domicilio",
+            "Envio de remolque en caso de robo de las llaves del auto",
+            "Coordinacion de denuncias de robo de tarjetas de credito y celular",
+            "Transmision de mensajes urgentes y conferencias telefonicas",
+            "Conexion con numeros de emrgencias",
+          ],
+        },
+        {
+          name: "Premium Transfers",
+          items: [
+            "Traslados medicos programados para una segunda opinion medica especializada para el titular y un acompañante en vuelos de linea o via terrestre",
+
+          ],
+        },
+        {
+          name: "Subsidio por Fallecimiento",
+          items: [
+            "OPCIONAL COBRO ANTICIPADO",
+            "colaborar con los gastos ant el requerimiento de un familiar directo",
+            "Presentando certificado de fallecimiento y documentacion que corrobore fehacientemente la relacion parental mas directa con el fallecido",
+
+          ],
+        },
+        {
+          name: "VIP remove service",
+          items: [
+            "Traslado de fallecidos entre Provincias limitrofes del ultimo domicilio informado en el DNI, abarcando toda la Republica Argentina",
+
+          ],
+        },
+        {
+          name: "Telemedic",
+          items: [
+            "video consulta medica"
+          ],
+        },
+        {
+          name: "Asistencia al Viajero",
+          items: [
+            "Nacional y paises limitrofes",
+            "Asistencia Medica por accidentes deportivos, preexistencias y embarazos",
+            "Wallet asistance: Asistencia ante la perdida orobo de billetera o documentos"
+          ],
+        },
+
+
       ],
-      contacto: "/contacto/credito",
+
+      contacto: "/contactanos"
     },
     // ...otros servicios
   ];
@@ -191,7 +333,7 @@ const SERVICIOS = () => {
                   <h5 className="mt-3 text-danger">{servicio.title}</h5>
                   <p className="text-secondary">{servicio.desc}</p>
                   <button
-                    className="btn btn-outline-danger mt-2"
+                    className="btn btn-outline-primary mt-2"
                     onClick={() => toggleCard(idx)}
                     aria-expanded={activeIndex === idx}
                     aria-controls={`panel-${idx}`}
