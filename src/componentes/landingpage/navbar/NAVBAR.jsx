@@ -46,7 +46,7 @@ const Navbar = () => {
           <ul className="navbar-nav ms-auto align-items-center">
 
             <br></br>
-            <li className="nav-item">
+            <li className="nav-item ">
               <Link
                 className={`btn me-2 ${isActive("/servicios") ? "btn-outline-light active" : "btn-light"}`}
                 to="/servicios"
@@ -57,7 +57,7 @@ const Navbar = () => {
             <br></br>
             <li className="nav-item">
               <Link
-                className={`btn me-2 ${isActive("/contactanos") ? "btn-outline-light active" : "btn-light"}`}
+                className={`btn me-2 mb-1 mt-1 ${isActive("/contactanos") ? "btn-outline-light active" : "btn-light"}`}
                 to="/contactanos"
               >
                 Contáctanos

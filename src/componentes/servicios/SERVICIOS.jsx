@@ -2,6 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Footer from "../landingpage/footer/FOOTER";
 import Navbar from "../landingpage/navbar/NAVBAR";
+import { Link } from "react-router-dom";
 
 const SERVICIOS = () => {
   const [activeIndex, setActiveIndex] = useState(null);
@@ -397,9 +398,12 @@ const SERVICIOS = () => {
                           </div>
                         ) : null}
 
-                        <a href={servicio.contacto} className="btn btn-danger mt-3">
-                          Contactar
-                        </a>
+                        <Link
+                          className={`btn me-2 ${("/contactanos") ? "btn-outline-danger danger" : "btn-light"}`}
+                          to="/contactanos"
+                        >
+                          Contáctanos
+                        </Link>
                       </motion.div>
                     )}
                   </AnimatePresence>
