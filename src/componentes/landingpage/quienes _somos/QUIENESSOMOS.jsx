@@ -53,12 +53,12 @@ const QuienesSomos = () => {
           <h2 className="fw-bold">Sobre nosotros</h2>
           <h5 className="text-muted">Asistodo</h5>
           <p className="mt-3 text-secondary">
-            Somos una empresa dedicada a brindar servicios de calidad, desde asistencia medica, asistencia en el hogar, video consultas medicas hasta subsidios por casamiento, los invitamos a ver nuestro apartado de servicios para conocer aun mas sobre todo lo que tenemos para ofrecer
+            Somos una empresa dedicada a brindar servicios de calidad desde asistencia médica, asistencia en el hogar, video consultas médicas hasta subsidios por casamiento. Los invitamos a ver nuestro apartado de servicios para conocer aun mas sobre todo lo que tenemos para ofrecer
 
           </p>
           <p className="mt-3 text-secondary">      
             
-            Contamos con mas de 10 años de experiencia brindando servicio de multiasistencia en todo el pais. Nos caracterizamos por responder en tiempo y forma con servicios flexibles y ajustados a las necesidades de  nuestros clientes, representando la mejor relacion costo-beneficio.
+            Contamos con mas de 10 años de experiencia brindando servicios de multiasistencia en todo el país. Nos caracterizamos por responder en tiempo y forma con servicios flexibles y ajustados a las necesidades de  nuestros clientes.
           </p>
         </div>
       </div>

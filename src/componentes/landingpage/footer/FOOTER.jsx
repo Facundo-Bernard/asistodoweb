@@ -40,7 +40,7 @@ const Footer = () => {
               </div>
               <div className="col-12 col-sm-6 col-md-6 d-flex align-items-center">
                 <i className="bi bi-geo-alt me-2"></i>
-                <span>Bartolomé Mitre 797, Buenos Aires</span>
+                <span>Bartolomé Mitre 797 piso 3, Buenos Aires</span>
               </div>
               <div className="col-12 col-sm-6 col-md-6 d-flex align-items-center">
                 <i className="bi bi-lock me-2"></i>

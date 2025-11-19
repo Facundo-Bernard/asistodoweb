@@ -10,20 +10,20 @@ const QueOfrecemos = () => {
     // Puedes duplicar o cambiar más ítems
     {
       title: 'Asistencia al viajero',
-      description: "Asistencia al viajero nacional y paises limitros. Incluye desde asistencia medica por accidentes deportivos, atencion a embarazadas, asistencia frente a robo de billetera/documentos entre otros",
+      description: "Asistencia al viajero nacional y paises limitrofes. Incluye desde asistencia médica por accidentes deportivos, atencion a embarazadas, asistencia frente a robo de billetera/documentos entre otros",
     },
     {
       title: 'Asistencia medica',
-      description: "Servicios de asistencia y cuidado medico, desde traslado por ambulancia, consulta de segunda opinion, medico a domicilio, linea de consultas hasta recordatorios de citas e ingesta de medicamentos",
+      description: "Servicios de asistencia y cuidado médico, desde traslado por ambulancia, consulta de segunda opinión, médico a domicilio, línea de consultas hasta recordatorios de citas e ingesta de medicamentos",
     },
        {
       title: 'Telemedicina',
-      description: "Video consultas medicas. El servicio consiste en la posinilidad de realizar una consulta virtual con un profesional de medicina familiar, pediatria, clinica",
+      description: "Videoconsultas médicas. El servicio consiste en la posibilidad de realizar una consulta virtual con un profesional de medicina familiar, pediatría, clínica",
     },
     
     {
       title: 'Telepsicologia',
-      description: "El servicio consiste en la posibilidad de que el asociado, asi como familiares directos realicen una consulta de caracter virtual con un profesional de la salud en la especialidad de psicologia",
+      description: "El servicio consiste en la posibilidad de que el asociado, asi como familiares directos realicen una consulta de caracter virtual con un profesional de la salud en la especialidad de psicología",
     },
     {
       title: 'Premium transfers',

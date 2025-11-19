@@ -47,7 +47,7 @@ const HeroCarousel = () => {
               <div className="content-box text-center p-4 rounded shadow" style={{ zIndex: 1 }}>
                 <h1 className="fw-bold text-dark mb-2">Asistodo</h1>
                 <p className="text-dark mb-3">
-                  Ofrecimiento de servicios multiasistencia por todo el pais. Listos para asistirte 24/7
+                  Ofrecimiento de servicios multiasistencia por todo el país. Listos para asistirte 24/7
                 </p>
                 <Link to="/servicios" className="btn btn btn-outline-primary">
                   Ver nuestros servicios
