@@ -1,0 +1,5 @@
+RewriteEngine On
+RewriteBase /
+
+# Redirige todas las rutas a index.html (equivalente a tu rewrite)
+RewriteRule ^.*$ /index.html [L]
