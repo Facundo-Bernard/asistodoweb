@@ -1,5 +1,9 @@
 RewriteEngine On
 RewriteBase /
 
-# Redirige todas las rutas a index.html (equivalente a tu rewrite)
-RewriteRule ^.*$ /index.html [L]
+# Si el archivo o directorio existe, servirlo normalmente
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Si no existe, enviar todo a index.html
+RewriteRule ^ index.html [L]
