@@ -36,7 +36,7 @@ const Footer = () => {
               </div>
               <div className="col-12 col-sm-6 col-md-6 d-flex align-items-center">
                 <i className="bi bi-telephone me-2"></i>
-                <span>+54 11 5597-2976</span>
+                <span>+54 11 7656 0109</span>
               </div>
               <div className="col-12 col-sm-6 col-md-6 d-flex align-items-center">
                 <i className="bi bi-geo-alt me-2"></i>
