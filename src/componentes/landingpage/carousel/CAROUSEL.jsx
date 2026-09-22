@@ -47,21 +47,20 @@ function HeroOneFile() {
         </p>
 
         <div className="hero-actions">
-          <button
-            className="hero-cta"
-            type="button"
-            onClick={() => (window.location.href = "/servicios")}
-          >
-            Ver nuestros servicios
-          </button>
-          <button
-            className="hero-cta hero-cta-request"
-            type="button"
-            onClick={() => (window.location.href = "/adelanto")}
-          >
-            Solicitá tu adelantó
-          </button>
+
         </div>
+      </div>
+
+      <div className="hero-advance-cta">
+        <span className="hero-advance-hint">¡Tu adelanto puede estar esperándote!</span>
+        <button
+          className="hero-advance-button"
+          type="button"
+          onClick={() => (window.location.href = "/adelanto")}
+        >
+          Solicitá tu adelanto
+          <span aria-hidden="true">→</span>
+        </button>
       </div>
 
       <button className="hero-control prev" onClick={prev}>‹</button>
@@ -153,9 +152,46 @@ function HeroOneFile() {
           flex-wrap:wrap;
           gap:.8rem;
         }
-        .hero-cta-request{
-          background:#342683;
-          box-shadow:0 6px 14px rgba(0,0,0,.22);
+        .hero-advance-cta{
+          position:absolute;
+          z-index:3;
+          left:50%;
+          bottom:clamp(5rem,17vh,8rem);
+          display:grid;
+          justify-items:center;
+          gap:.55rem;
+          opacity:0;
+          transform:translate(-50%,18px);
+        }
+        .hero-advance-hint{
+          color:#fff;
+          font-size:clamp(.82rem,1.5vw,1rem);
+          font-weight:700;
+          letter-spacing:.02em;
+          text-shadow:0 2px 8px rgba(0,0,0,.45);
+        }
+        .hero-advance-button{
+          display:inline-flex;
+          align-items:center;
+          justify-content:center;
+          gap:.7rem;
+          min-width:min(90vw,340px);
+          padding:1rem 2rem;
+          border:2px solid white;
+          border-radius:999px;
+          background:linear-gradient(110deg,#ffc955 0%,#fff08a 47%,#ffc13d 100%);
+          color:#30206d;
+          font-size:clamp(1.05rem,2vw,1.22rem);
+          font-weight:800;
+          box-shadow:0 0 0 5px rgba(255,215,95,.24),0 14px 34px rgba(28,15,87,.48);
+          cursor:pointer;
+          transition:transform .22s ease,filter .22s ease,box-shadow .22s ease;
+          animation:heroMoneyPulse 1.8s ease-in-out infinite;
+        }
+        .hero-advance-button:hover{
+          filter:brightness(1.08);
+          transform:translateY(-4px) scale(1.035);
+          box-shadow:0 0 0 8px rgba(255,225,112,.3),0 18px 42px rgba(28,15,87,.58);
         }
         .hero-cta:hover{
           transform:translateY(-3px);
@@ -194,15 +230,29 @@ function HeroOneFile() {
         .hero-loaded .hero-cta{
           animation:fadeUp .9s ease forwards .30s;
         }
+        .hero-loaded .hero-advance-cta{
+          animation:heroCtaIn .9s ease forwards .45s;
+        }
 
         @keyframes fadeUp{
           from{ opacity:0; transform:translateY(18px); }
           to{ opacity:1; transform:translateY(0); }
         }
+        @keyframes heroCtaIn{
+          from{ opacity:0; transform:translate(-50%,18px); }
+          to{ opacity:1; transform:translate(-50%,0); }
+        }
+        @keyframes heroMoneyPulse{
+          0%,100%{ box-shadow:0 0 0 5px rgba(255,215,95,.24),0 14px 34px rgba(28,15,87,.48); }
+          50%{ box-shadow:0 0 0 10px rgba(255,225,112,.16),0 16px 40px rgba(28,15,87,.62); }
+        }
 
         @media(max-width:576px){
-          .hero-content{text-align:center; padding-left:5vw;}
+          .hero-content{text-align:center; padding:0 5vw;}
           .hero-actions{justify-content:center;}
+          .hero-advance-cta{bottom:1.6rem; width:100%;}
+          .hero-advance-hint{font-size:.8rem;}
+          .hero-advance-button{min-width:0; width:min(90vw,340px); padding:.85rem 1rem;}
           .hero-control{display:none;}
         }
       `}</style>

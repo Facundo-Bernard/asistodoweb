@@ -114,7 +114,7 @@ export default function Navbar() {
 
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto align-items-center gap-2">
-            <li className="nav-item">{renderLink('/servicios', 'Servicios')}</li>
+            <li className="nav-item">{renderLink('/servicios', 'Ver nuestros servicios')}</li>
             <li className="nav-item">{renderLink('/contactanos', 'Contáctanos')}</li>
           </ul>
         </div>
