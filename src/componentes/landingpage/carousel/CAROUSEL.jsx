@@ -46,9 +46,22 @@ function HeroOneFile() {
           Multiasistencia nacional con corazón. Estamos donde nos necesitas, 24/7.
         </p>
 
-        <button className="hero-cta" onClick={() => (window.location.href = "/servicios")}>
-          Ver nuestros servicios
-        </button>
+        <div className="hero-actions">
+          <button
+            className="hero-cta"
+            type="button"
+            onClick={() => (window.location.href = "/servicios")}
+          >
+            Ver nuestros servicios
+          </button>
+          <button
+            className="hero-cta hero-cta-request"
+            type="button"
+            onClick={() => (window.location.href = "/adelanto")}
+          >
+            Solicitá tu adelantó
+          </button>
+        </div>
       </div>
 
       <button className="hero-control prev" onClick={prev}>‹</button>
@@ -126,7 +139,7 @@ function HeroOneFile() {
         .hero-cta{
           padding:.65rem 1.7rem;
           border-radius:999px;
-          border:none;
+          border:1px solid white;
           font-size:1rem;
           font-weight:500;
           background:var(--accent);
@@ -134,6 +147,15 @@ function HeroOneFile() {
           cursor:pointer;
           transition:.25s ease;
           box-shadow:0 8px 24px rgba(40,40,140,.35);
+        }
+        .hero-actions{
+          display:flex;
+          flex-wrap:wrap;
+          gap:.8rem;
+        }
+        .hero-cta-request{
+          background:#342683;
+          box-shadow:0 6px 14px rgba(0,0,0,.22);
         }
         .hero-cta:hover{
           transform:translateY(-3px);
@@ -180,6 +202,7 @@ function HeroOneFile() {
 
         @media(max-width:576px){
           .hero-content{text-align:center; padding-left:5vw;}
+          .hero-actions{justify-content:center;}
           .hero-control{display:none;}
         }
       `}</style>
