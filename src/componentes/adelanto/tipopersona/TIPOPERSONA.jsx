@@ -1,7 +1,11 @@
 import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { clearAdvanceOffer, setAdvanceScreen, updateAdvanceDetails } from "../../../REDUX/adelantoSlice";
 import { getDetailsErrors, minimumAgeFor, onlyDigits } from "./validaciones";
 
-export default function TipoPersona({ details, onDetailsChange, onNext }) {
+export default function TipoPersona() {
+  const dispatch = useDispatch();
+  const details = useSelector((state) => state.adelanto.details);
   const [touched, setTouched] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const errors = getDetailsErrors(details);
@@ -10,21 +14,25 @@ export default function TipoPersona({ details, onDetailsChange, onNext }) {
 
   const showError = (field) => (submitted || touched[field]) && errors[field];
   const markTouched = (field) => setTouched((current) => ({ ...current, [field]: true }));
+  const updateDetails = (change) => {
+    dispatch(updateAdvanceDetails(change));
+    dispatch(clearAdvanceOffer());
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
     setSubmitted(true);
-    if (canContinue) onNext();
+    if (canContinue) dispatch(setAdvanceScreen("eleccioncuotas"));
   };
 
   const updateAge = (value) => {
     const age = onlyDigits(value);
-    if (!age || Number(age) <= 100) onDetailsChange({ age });
+    if (!age || Number(age) <= 100) updateDetails({ age });
   };
 
   const updateIncome = (value) => {
     const income = onlyDigits(value);
-    if (!income || Number(income) <= 3000000) onDetailsChange({ income });
+    if (!income || Number(income) <= 3000000) updateDetails({ income });
   };
 
   return (
@@ -43,7 +51,7 @@ export default function TipoPersona({ details, onDetailsChange, onNext }) {
               autoComplete="name"
               value={details.fullName}
               onBlur={() => markTouched("fullName")}
-              onChange={(event) => onDetailsChange({ fullName: event.target.value })}
+              onChange={(event) => updateDetails({ fullName: event.target.value })}
               aria-invalid={Boolean(showError("fullName"))}
             />
             {showError("fullName") && <span className="field-error">{errors.fullName}</span>}
@@ -59,7 +67,7 @@ export default function TipoPersona({ details, onDetailsChange, onNext }) {
               maxLength="8"
               value={details.dni}
               onBlur={() => markTouched("dni")}
-              onChange={(event) => onDetailsChange({ dni: onlyDigits(event.target.value) })}
+              onChange={(event) => updateDetails({ dni: onlyDigits(event.target.value) })}
               aria-invalid={Boolean(showError("dni"))}
             />
             {showError("dni") && <span className="field-error">{errors.dni}</span>}
@@ -74,7 +82,7 @@ export default function TipoPersona({ details, onDetailsChange, onNext }) {
               autoComplete="email"
               value={details.email}
               onBlur={() => markTouched("email")}
-              onChange={(event) => onDetailsChange({ email: event.target.value.trimStart() })}
+              onChange={(event) => updateDetails({ email: event.target.value.trimStart() })}
               aria-invalid={Boolean(showError("email"))}
             />
             {showError("email") && <span className="field-error">{errors.email}</span>}
@@ -90,7 +98,7 @@ export default function TipoPersona({ details, onDetailsChange, onNext }) {
               maxLength="20"
               value={details.phone}
               onBlur={() => markTouched("phone")}
-              onChange={(event) => onDetailsChange({ phone: event.target.value.replace(/[^\d+\s()-]/g, "") })}
+              onChange={(event) => updateDetails({ phone: event.target.value.replace(/[^\d+\s()-]/g, "") })}
               aria-invalid={Boolean(showError("phone"))}
             />
             {showError("phone") && <span className="field-error">{errors.phone}</span>}
@@ -105,7 +113,7 @@ export default function TipoPersona({ details, onDetailsChange, onNext }) {
               placeholder="Ej.: Av. Corrientes 1234"
               value={details.address}
               onBlur={() => markTouched("address")}
-              onChange={(event) => onDetailsChange({ address: event.target.value })}
+              onChange={(event) => updateDetails({ address: event.target.value })}
               aria-invalid={Boolean(showError("address"))}
             />
             {showError("address") && <span className="field-error">{errors.address}</span>}
@@ -122,7 +130,7 @@ export default function TipoPersona({ details, onDetailsChange, onNext }) {
                   checked={details.gender === "male"}
                   onChange={(event) => {
                     markTouched("gender");
-                    onDetailsChange({ gender: event.target.value });
+                    updateDetails({ gender: event.target.value });
                   }}
                 />
                 Hombre
@@ -135,7 +143,7 @@ export default function TipoPersona({ details, onDetailsChange, onNext }) {
                   checked={details.gender === "female"}
                   onChange={(event) => {
                     markTouched("gender");
-                    onDetailsChange({ gender: event.target.value });
+                    updateDetails({ gender: event.target.value });
                   }}
                 />
                 Mujer
@@ -191,7 +199,7 @@ export default function TipoPersona({ details, onDetailsChange, onNext }) {
                 checked={details.employment === "working"}
                 onChange={(event) => {
                   markTouched("employment");
-                  onDetailsChange({ employment: event.target.value });
+                  updateDetails({ employment: event.target.value });
                 }}
               />
               Trabajo
@@ -204,7 +212,7 @@ export default function TipoPersona({ details, onDetailsChange, onNext }) {
                 checked={details.employment === "retired"}
                 onChange={(event) => {
                   markTouched("employment");
-                  onDetailsChange({ employment: event.target.value });
+                  updateDetails({ employment: event.target.value });
                 }}
               />
               Soy jubilado/a
@@ -217,13 +225,13 @@ export default function TipoPersona({ details, onDetailsChange, onNext }) {
                 checked={details.employment === "graciable"}
                 onChange={(event) => {
                   markTouched("employment");
-                  onDetailsChange({ employment: event.target.value });
+                  updateDetails({ employment: event.target.value });
                 }}
               />
               Pensión graciable
             </label>
           </div>
-          <span className="field-help">La pensión graciable tiene las mismas opciones que una jubilación.</span>
+          <span className="field-help">La pensión graciable no incluye productos ANSES.</span>
           {showError("employment") && <span className="field-error">{errors.employment}</span>}
         </fieldset>
 

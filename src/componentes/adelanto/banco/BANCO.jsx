@@ -1,6 +1,11 @@
+import { useDispatch, useSelector } from "react-redux";
 import { BANKS } from "../datos/productos";
+import { setAdvanceScreen, toggleSelectedBank } from "../../../REDUX/adelantoSlice";
 
-export default function Banco({ selectedBanks, selectionLimit, onToggleBank, onNext }) {
+export default function Banco() {
+  const dispatch = useDispatch();
+  const { selectedBanks, selectionLimit } = useSelector((state) => state.adelanto);
+
   return (
     <>
       <span className="advance-eyebrow">Solicitud de adelanto</span>
@@ -18,7 +23,7 @@ export default function Banco({ selectedBanks, selectionLimit, onToggleBank, onN
               <input
                 type="checkbox"
                 checked={isSelected}
-                onChange={() => onToggleBank(bank.id)}
+                onChange={() => dispatch(toggleSelectedBank(bank.id))}
               />
               <span className="bank-check" aria-hidden="true">{isSelected && "✓"}</span>
               <span>{bank.name}</span>
@@ -31,7 +36,12 @@ export default function Banco({ selectedBanks, selectionLimit, onToggleBank, onN
         {selectionLimit ? "Solo podés elegir hasta dos bancos." : `${selectedBanks.length} de 2 bancos seleccionados`}
       </p>
 
-      <button className="advance-button" type="button" disabled={selectedBanks.length === 0} onClick={onNext}>
+      <button
+        className="advance-button"
+        type="button"
+        disabled={selectedBanks.length === 0}
+        onClick={() => dispatch(setAdvanceScreen("validando"))}
+      >
         Siguiente
       </button>
     </>

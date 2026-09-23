@@ -45,26 +45,45 @@ export const formatCurrency = (amount) => new Intl.NumberFormat("es-AR", {
 }).format(amount);
 
 export function getAvailableProductGroups({ employment, income }) {
-  if (employment === "retired" || employment === "graciable") {
+  const productsWithAffordableInstallments = (products) => products
+    .map((product) => ({
+      ...product,
+      installments: product.installments.filter((installment) => installment.payment <= income * 0.35),
+    }))
+    .filter((product) => product.installments.length > 0);
+
+  if (employment === "retired") {
     return [
       {
         title: "ANSES Signature",
         description: "Opciones disponibles hasta $300.000.",
-        products: ANSES_SIGNATURE_PRODUCTS.filter((product) => product.amount <= Math.min(income, 300000)),
+        products: productsWithAffordableInstallments(
+          ANSES_SIGNATURE_PRODUCTS.filter((product) => product.amount <= Math.min(income, 300000)),
+        ),
       },
       {
         title: "Asistodo",
         description: "Opciones desde $350.000 para jubilados con ingresos mayores a $300.000.",
         products: income > 300000
-          ? ASISTODO_PRODUCTS.filter((product) => product.amount > 300000 && product.amount <= income)
+          ? productsWithAffordableInstallments(ASISTODO_PRODUCTS.filter((product) => product.amount > 300000 && product.amount <= income))
           : [],
       },
     ].filter((group) => group.products.length > 0);
   }
 
+  if (employment === "graciable") {
+    return [{
+      title: "Asistodo",
+      description: "Las pensiones graciables no acceden a productos ANSES.",
+      products: income > 300000
+        ? productsWithAffordableInstallments(ASISTODO_PRODUCTS.filter((product) => product.amount > 300000 && product.amount <= income))
+        : [],
+    }].filter((group) => group.products.length > 0);
+  }
+
   return [{
     title: "Asistodo",
     description: "Opciones disponibles para cobrar por Banco Nación o BAPRO.",
-    products: ASISTODO_PRODUCTS.filter((product) => product.amount <= income),
+    products: productsWithAffordableInstallments(ASISTODO_PRODUCTS.filter((product) => product.amount <= income)),
   }].filter((group) => group.products.length > 0);
 }

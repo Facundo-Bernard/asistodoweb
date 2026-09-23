@@ -1,16 +1,11 @@
+import { useDispatch, useSelector } from "react-redux";
+import { selectAdvanceOffer, setAdvanceScreen } from "../../../REDUX/adelantoSlice";
 import PropCard from "../ofrecimientoprestamo/PROPCARD";
 import { formatCurrency, getAvailableProductGroups } from "../datos/productos";
 
-export default function EleccionCuotas({
-  details,
-  selectedOffer,
-  onSelectOffer,
-  onSubmitApplication,
-  submissionStatus,
-  submissionError,
-  submissionId,
-  onBack,
-}) {
+export default function EleccionCuotas() {
+  const dispatch = useDispatch();
+  const { details, selectedOffer } = useSelector((state) => state.adelanto);
   const income = Number(details.income) || 0;
   const productGroups = getAvailableProductGroups({ employment: details.employment, income });
 
@@ -18,7 +13,9 @@ export default function EleccionCuotas({
     <>
       <span className="advance-eyebrow">Elección de cuotas</span>
       <h1>Elegí el adelanto que te conviene</h1>
-      <p className="advance-description">El monto máximo disponible coincide con tu ingreso mensual.</p>
+      <p className="advance-description">
+        El monto máximo disponible coincide con tu ingreso mensual. Solo mostramos cuotas de hasta el 35% de tu ingreso.
+      </p>
 
       <div className="advance-limit">
         <span>Tu tope de adelanto</span>
@@ -42,7 +39,7 @@ export default function EleccionCuotas({
                     key={product.id}
                     product={product}
                     selectedOffer={selectedOffer}
-                    onSelectOffer={onSelectOffer}
+                    onSelectOffer={(offer) => dispatch(selectAdvanceOffer(offer))}
                   />
                 ))}
               </div>
@@ -52,32 +49,20 @@ export default function EleccionCuotas({
       ) : (
         <div className="no-products">
           <h2>No encontramos productos disponibles</h2>
-          <p>El ingreso informado no alcanza el monto mínimo de las opciones vigentes.</p>
+          <p>Con los datos informados no hay una cuota que respete el máximo del 35% de tu ingreso.</p>
         </div>
       )}
 
-      {submissionStatus === "success" ? (
-        <div className="application-success" role="status">
-          <strong>¡Solicitud registrada!</strong>
-          <span>Tu número de solicitud es {submissionId}.</span>
-        </div>
-      ) : (
-        <>
-          {submissionStatus === "error" && (
-            <p className="application-error" role="alert">{submissionError}</p>
-          )}
-          <button
-            className="advance-button submit-application-button"
-            type="button"
-            disabled={!selectedOffer || submissionStatus === "sending"}
-            onClick={onSubmitApplication}
-          >
-            {submissionStatus === "sending" ? "Enviando solicitud..." : "Enviar solicitud"}
-          </button>
-        </>
-      )}
+      <button
+        className="advance-button submit-application-button"
+        type="button"
+        disabled={!selectedOffer}
+        onClick={() => dispatch(setAdvanceScreen("documentacion"))}
+      >
+        Continuar
+      </button>
 
-      <button className="advance-secondary-button" type="button" onClick={onBack}>
+      <button className="advance-secondary-button" type="button" onClick={() => dispatch(setAdvanceScreen("tipopersona"))}>
         Modificar mis datos
       </button>
     </>
