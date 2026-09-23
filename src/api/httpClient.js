@@ -11,6 +11,7 @@ export const API_URIS = Object.freeze({
   candidates: {
     collection: "/api/v1/candidatos",
     byId: (id) => `/api/v1/candidatos/${id}`,
+    paperworkById: (id) => `/api/v1/candidatos/papeleria/${id}`,
   },
 });
 

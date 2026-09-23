@@ -15,6 +15,19 @@ export async function getCandidates() {
   return Array.isArray(data) ? data : data.items || data.results || [];
 }
 
+export async function getCandidate(id) {
+  const { data } = await httpClient.get(API_URIS.candidates.byId(id));
+  return data;
+}
+
+export async function getCandidatePaperwork(paperworkPath) {
+  const { data, headers } = await httpClient.get(paperworkPath, { responseType: "blob" });
+  const disposition = headers["content-disposition"] || "";
+  const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || "papeleria";
+
+  return { blob: data, filename };
+}
+
 export async function removeCandidate(id) {
   await httpClient.delete(API_URIS.candidates.byId(id));
 }

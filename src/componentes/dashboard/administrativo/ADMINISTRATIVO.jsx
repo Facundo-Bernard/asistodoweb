@@ -1,7 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { clearAccessToken, getAccessToken, saveAccessToken } from "../../../api/httpClient";
-import { getCandidates, getCurrentUser, loginAdministrator, removeCandidate } from "./adminApi";
+import {
+  getCandidate,
+  getCandidatePaperwork,
+  getCandidates,
+  getCurrentUser,
+  loginAdministrator,
+  removeCandidate,
+} from "./adminApi";
 import "./ADMINISTRATIVO.css";
+
+const EMPTY_PAPERWORK = { status: "idle", error: "", url: "", type: "", filename: "" };
 
 const formatCurrency = (amount) => new Intl.NumberFormat("es-AR", {
   style: "currency",
@@ -16,6 +25,8 @@ const formatDate = (value) => {
 };
 
 const getErrorMessage = (error, fallback) => error.response?.data?.detail || fallback;
+const employmentLabels = { working: "Trabaja", retired: "Jubilado/a", graciable: "Pensión graciable" };
+const genderLabels = { male: "Hombre", female: "Mujer" };
 
 export default function Administrativo() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
@@ -27,6 +38,15 @@ export default function Administrativo() {
   const [loginError, setLoginError] = useState("");
   const [listError, setListError] = useState("");
   const [deletingId, setDeletingId] = useState("");
+  const [detailCandidate, setDetailCandidate] = useState(null);
+  const [detailStatus, setDetailStatus] = useState("idle");
+  const [detailError, setDetailError] = useState("");
+  const [paperwork, setPaperwork] = useState(EMPTY_PAPERWORK);
+  const detailRequestId = useRef(0);
+
+  useEffect(() => () => {
+    if (paperwork.url) URL.revokeObjectURL(paperwork.url);
+  }, [paperwork.url]);
 
   const loadCandidates = async () => {
     setLoadingCandidates(true);
@@ -98,6 +118,47 @@ export default function Administrativo() {
     setQuery("");
   };
 
+  const closeDetail = () => {
+    detailRequestId.current += 1;
+    setDetailCandidate(null);
+    setDetailStatus("idle");
+    setDetailError("");
+    setPaperwork(EMPTY_PAPERWORK);
+  };
+
+  const handleViewDetail = async (candidate) => {
+    const requestId = detailRequestId.current + 1;
+    detailRequestId.current = requestId;
+    setDetailCandidate(candidate);
+    setDetailStatus("loading");
+    setDetailError("");
+    setPaperwork(EMPTY_PAPERWORK);
+
+    try {
+      const fullCandidate = await getCandidate(candidate.id);
+      if (detailRequestId.current !== requestId) return;
+
+      setDetailCandidate(fullCandidate);
+      setDetailStatus("ready");
+
+      if (!fullCandidate.papeleria) return;
+
+      setPaperwork({ ...EMPTY_PAPERWORK, status: "loading" });
+      try {
+        const { blob, filename } = await getCandidatePaperwork(fullCandidate.papeleria);
+        if (detailRequestId.current !== requestId) return;
+        setPaperwork({ status: "ready", error: "", url: URL.createObjectURL(blob), type: blob.type, filename });
+      } catch (error) {
+        if (detailRequestId.current !== requestId) return;
+        setPaperwork({ ...EMPTY_PAPERWORK, status: "error", error: getErrorMessage(error, "No pudimos cargar la documentación.") });
+      }
+    } catch (error) {
+      if (detailRequestId.current !== requestId) return;
+      setDetailStatus("error");
+      setDetailError(getErrorMessage(error, "No pudimos cargar el detalle de la solicitud."));
+    }
+  };
+
   const handleDelete = async (candidate) => {
     const confirmed = window.confirm(`¿Eliminar la solicitud de ${candidate.nombreCompleto}? Esta acción no se puede deshacer.`);
     if (!confirmed) return;
@@ -108,6 +169,7 @@ export default function Administrativo() {
     try {
       await removeCandidate(candidate.id);
       setCandidates((current) => current.filter((item) => item.id !== candidate.id));
+      if (detailCandidate?.id === candidate.id) closeDetail();
     } catch (error) {
       setListError(getErrorMessage(error, "No pudimos eliminar la solicitud."));
     } finally {
@@ -155,6 +217,9 @@ export default function Administrativo() {
       </main>
     );
   }
+
+  const detailProduct = detailCandidate?.productoSeleccionado || {};
+  const isPdf = paperwork.type === "application/pdf" || /\.pdf$/i.test(paperwork.filename);
 
   return (
     <main className="admin-page">
@@ -216,7 +281,7 @@ export default function Administrativo() {
                       <span>{candidate.telefono}</span>
                     </td>
                     <td>
-                      <span>{candidate.situacionLaboral}</span>
+                      <span>{employmentLabels[candidate.situacionLaboral] || candidate.situacionLaboral}</span>
                       <span>{candidate.edad} años</span>
                     </td>
                     <td>{formatCurrency(candidate.ingresoMensual)}</td>
@@ -226,14 +291,19 @@ export default function Administrativo() {
                     </td>
                     <td>{formatDate(candidate.fechaCreacion)}</td>
                     <td>
-                      <button
-                        type="button"
-                        className="admin-delete-button"
-                        onClick={() => handleDelete(candidate)}
-                        disabled={deletingId === candidate.id}
-                      >
-                        {deletingId === candidate.id ? "Eliminando..." : "Eliminar"}
-                      </button>
+                      <div className="admin-row-actions">
+                        <button type="button" className="admin-detail-button" onClick={() => handleViewDetail(candidate)}>
+                          Ver detalle
+                        </button>
+                        <button
+                          type="button"
+                          className="admin-delete-button"
+                          onClick={() => handleDelete(candidate)}
+                          disabled={deletingId === candidate.id}
+                        >
+                          {deletingId === candidate.id ? "Eliminando..." : "Eliminar"}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -242,6 +312,74 @@ export default function Administrativo() {
           </table>
         </div>
       </section>
+
+      {detailCandidate && (
+        <div className="admin-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && closeDetail()}>
+          <section className="admin-detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+            <header className="admin-detail-header">
+              <div>
+                <span className="admin-eyebrow">Detalle de solicitud</span>
+                <h2 id="detail-title">{detailCandidate.nombreCompleto}</h2>
+              </div>
+              <button className="admin-modal-close" type="button" onClick={closeDetail} aria-label="Cerrar detalle">×</button>
+            </header>
+
+            {detailStatus === "loading" ? (
+              <p className="admin-detail-loading">Cargando información de la solicitud...</p>
+            ) : detailStatus === "error" ? (
+              <p className="admin-error" role="alert">{detailError}</p>
+            ) : (
+              <>
+                <dl className="admin-detail-grid">
+                  <div><dt>DNI</dt><dd>{detailCandidate.dni}</dd></div>
+                  <div><dt>Fecha</dt><dd>{formatDate(detailCandidate.fechaCreacion)}</dd></div>
+                  <div><dt>Mail</dt><dd>{detailCandidate.email}</dd></div>
+                  <div><dt>Teléfono</dt><dd>{detailCandidate.telefono}</dd></div>
+                  <div className="admin-detail-wide"><dt>Dirección</dt><dd>{detailCandidate.direccion}</dd></div>
+                  <div><dt>Género</dt><dd>{genderLabels[detailCandidate.genero] || detailCandidate.genero}</dd></div>
+                  <div><dt>Edad</dt><dd>{detailCandidate.edad} años</dd></div>
+                  <div><dt>Situación laboral</dt><dd>{employmentLabels[detailCandidate.situacionLaboral] || detailCandidate.situacionLaboral}</dd></div>
+                  <div><dt>Ingreso mensual</dt><dd>{formatCurrency(detailCandidate.ingresoMensual)}</dd></div>
+                  <div className="admin-detail-wide"><dt>Bancos seleccionados</dt><dd>{detailCandidate.bancosSeleccionados?.join(", ") || "No informado"}</dd></div>
+                </dl>
+
+                <section className="admin-detail-product">
+                  <span>Producto seleccionado</span>
+                  <strong>{detailProduct.familia || "Sin producto"} · {detailProduct.plan || "Sin plan"}</strong>
+                  <p>{formatCurrency(detailProduct.monto)} · {detailProduct.plazoMeses} meses</p>
+                </section>
+
+                <section className="admin-paperwork" aria-labelledby="paperwork-title">
+                  <div className="admin-paperwork-heading">
+                    <div>
+                      <span className="admin-eyebrow">Documentación</span>
+                      <h3 id="paperwork-title">Recibo de sueldo</h3>
+                    </div>
+                    {paperwork.status === "ready" && (
+                      <a className="admin-download-button" href={paperwork.url} download={paperwork.filename}>
+                        Descargar
+                      </a>
+                    )}
+                  </div>
+
+                  {!detailCandidate.papeleria && <p className="admin-paperwork-empty">Esta solicitud se continuó por WhatsApp o no tiene documentación adjunta.</p>}
+                  {paperwork.status === "loading" && <p className="admin-detail-loading">Cargando documentación...</p>}
+                  {paperwork.status === "error" && <p className="admin-error" role="alert">{paperwork.error}</p>}
+                  {paperwork.status === "ready" && (
+                    <div className="admin-paperwork-preview">
+                      {isPdf ? (
+                        <iframe src={paperwork.url} title={`Vista previa de ${paperwork.filename}`} />
+                      ) : (
+                        <img src={paperwork.url} alt={`Recibo de sueldo: ${paperwork.filename}`} />
+                      )}
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
+          </section>
+        </div>
+      )}
     </main>
   );
 }
