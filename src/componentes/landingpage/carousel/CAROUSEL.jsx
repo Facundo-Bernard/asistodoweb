@@ -156,12 +156,12 @@ function HeroOneFile() {
           position:absolute;
           z-index:3;
           left:50%;
-          bottom:clamp(5rem,17vh,8rem);
+          top:50%;
           display:grid;
           justify-items:center;
           gap:.55rem;
           opacity:0;
-          transform:translate(-50%,18px);
+          transform:translate(-50%,-50%) translateY(18px);
         }
         .hero-advance-hint{
           color:#fff;
@@ -175,13 +175,13 @@ function HeroOneFile() {
           align-items:center;
           justify-content:center;
           gap:.7rem;
-          min-width:min(90vw,340px);
-          padding:1rem 2rem;
+          min-width:min(90vw,500px);
+          padding:1.15rem 2.6rem;
           border:2px solid white;
           border-radius:999px;
           background:linear-gradient(110deg,#ffc955 0%,#fff08a 47%,#ffc13d 100%);
           color:#30206d;
-          font-size:clamp(1.05rem,2vw,1.22rem);
+          font-size:clamp(1.2rem,2.3vw,1.55rem);
           font-weight:800;
           box-shadow:0 0 0 5px rgba(255,215,95,.24),0 14px 34px rgba(28,15,87,.48);
           cursor:pointer;
@@ -239,8 +239,8 @@ function HeroOneFile() {
           to{ opacity:1; transform:translateY(0); }
         }
         @keyframes heroCtaIn{
-          from{ opacity:0; transform:translate(-50%,18px); }
-          to{ opacity:1; transform:translate(-50%,0); }
+          from{ opacity:0; transform:translate(-50%,-50%) translateY(18px); }
+          to{ opacity:1; transform:translate(-50%,-50%); }
         }
         @keyframes heroMoneyPulse{
           0%,100%{ box-shadow:0 0 0 5px rgba(255,215,95,.24),0 14px 34px rgba(28,15,87,.48); }
@@ -250,7 +250,7 @@ function HeroOneFile() {
         @media(max-width:576px){
           .hero-content{text-align:center; padding:0 5vw;}
           .hero-actions{justify-content:center;}
-          .hero-advance-cta{bottom:1.6rem; width:100%;}
+          .hero-advance-cta{top:50%; bottom:auto; width:100%;}
           .hero-advance-hint{font-size:.8rem;}
           .hero-advance-button{min-width:0; width:min(90vw,340px); padding:.85rem 1rem;}
           .hero-control{display:none;}

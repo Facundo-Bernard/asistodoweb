@@ -12,6 +12,7 @@
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "@reduxjs/toolkit": "^2.8.2",
+    "axios": "^1.20.0",
     "bootstrap": "^5.3.7",
     "framer-motion": "^12.23.12",
     "heatmap.js": "^2.0.5",

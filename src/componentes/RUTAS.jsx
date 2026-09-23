@@ -5,6 +5,7 @@ import SERVICIOS from './servicios/SERVICIOS';
 import CONTACTANOS from './contactanos/CONTACTANOS';
 import BAJAS from './bajas/BAJAS';
 import ADELANTO from './adelanto/ADELANTO';
+import ADMINISTRATIVO from './dashboard/administrativo/ADMINISTRATIVO';
 
 function RUTAS() {
   return (
@@ -15,6 +16,7 @@ function RUTAS() {
       <Route path="/" element={<LANFINGPAGEMAIN></LANFINGPAGEMAIN>} ></Route>
       <Route path="/bajas" element={<BAJAS/>} />
       <Route path="/adelanto" element={<ADELANTO />} />
+      <Route path="/admin/solicitudes" element={<ADMINISTRATIVO />} />
     </Routes>
   );
 }
