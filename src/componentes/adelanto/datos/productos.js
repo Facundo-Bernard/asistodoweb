@@ -75,9 +75,7 @@ export function getAvailableProductGroups({ employment, income }) {
     return [{
       title: "Asistodo",
       description: "Las pensiones graciables no acceden a productos ANSES.",
-      products: income > 300000
-        ? productsWithAffordableInstallments(ASISTODO_PRODUCTS.filter((product) => product.amount > 300000 && product.amount <= income))
-        : [],
+      products: productsWithAffordableInstallments(ASISTODO_PRODUCTS.filter((product) => product.amount <= income)),
     }].filter((group) => group.products.length > 0);
   }
 
