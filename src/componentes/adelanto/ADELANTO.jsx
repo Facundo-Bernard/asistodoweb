@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./ADELANTO.css";
 import Banco from "./banco/BANCO";
@@ -13,19 +14,26 @@ import { createCandidate } from "./api/candidatosApi";
 import {
   advanceSubmissionFailed,
   advanceSubmissionSucceeded,
+  resetAdvance,
   setAdvanceScreen,
   startAdvanceSubmission,
 } from "../../REDUX/adelantoSlice";
 
 export default function Adelanto() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const isSubmitting = useRef(false);
   const { screen, selectedBanks, details, selectedOffer, submission } = useSelector((state) => state.adelanto);
 
   useEffect(() => {
-    if (screen !== "validando") return undefined;
+    if (screen !== "validando" && screen !== "evaluando-trabajo") return undefined;
 
     const timer = window.setTimeout(() => {
+      if (screen === "evaluando-trabajo") {
+        dispatch(setAdvanceScreen("no-disponible-trabajo"));
+        return;
+      }
+
       const canContinue = selectedBanks.some((bankId) => ELIGIBLE_BANK_IDS.has(bankId));
       dispatch(setAdvanceScreen(canContinue ? "tipopersona" : "no-disponible"));
     }, 1000);
@@ -88,6 +96,14 @@ export default function Adelanto() {
           </div>
         )}
 
+        {screen === "evaluando-trabajo" && (
+          <div className="advance-loading">
+            <span className="loading-spinner" aria-hidden="true" />
+            <h1>Estamos evaluando tu solicitud</h1>
+            <p>Un momento, por favor.</p>
+          </div>
+        )}
+
         {screen === "no-disponible" && (
           <div className="advance-result">
             <span className="result-icon" aria-hidden="true">!</span>
@@ -95,6 +111,24 @@ export default function Adelanto() {
             <p>Para solicitar un adelanto, seleccioná Banco Nación o Banco Provincia (BAPRO).</p>
             <button className="advance-button" type="button" onClick={() => dispatch(setAdvanceScreen("banco"))}>
               Volver a elegir bancos
+            </button>
+          </div>
+        )}
+
+        {screen === "no-disponible-trabajo" && (
+          <div className="advance-result">
+            <span className="result-icon" aria-hidden="true">!</span>
+            <h1>Por el momento no podemos continuar</h1>
+            <p>En este momento, los adelantos están disponibles para jubilados y pensiones graciables.</p>
+            <button
+              className="advance-button"
+              type="button"
+              onClick={() => {
+                dispatch(resetAdvance());
+                navigate("/");
+              }}
+            >
+              Volver al inicio
             </button>
           </div>
         )}

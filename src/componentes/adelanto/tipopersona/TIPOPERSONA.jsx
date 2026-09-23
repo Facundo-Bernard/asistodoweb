@@ -22,7 +22,7 @@ export default function TipoPersona() {
   const handleSubmit = (event) => {
     event.preventDefault();
     setSubmitted(true);
-    if (canContinue) dispatch(setAdvanceScreen("eleccioncuotas"));
+    if (canContinue) dispatch(setAdvanceScreen(details.employment === "working" ? "evaluando-trabajo" : "eleccioncuotas"));
   };
 
   const updateAge = (value) => {
