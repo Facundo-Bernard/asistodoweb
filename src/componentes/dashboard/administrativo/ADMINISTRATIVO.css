@@ -31,9 +31,9 @@
 }
 
 .admin-login-form input:focus, .admin-toolbar input:focus { border-color: #342683; box-shadow: 0 0 0 .2rem rgba(52, 38, 131, .13); }
-.admin-login-form button, .admin-secondary-button, .admin-logout-button, .admin-detail-button, .admin-delete-button, .admin-download-button { border-radius: 999px; font-weight: 700; transition: filter .2s ease, transform .2s ease; }
+.admin-login-form button, .admin-secondary-button, .admin-logout-button, .admin-detail-button, .admin-accept-button, .admin-delete-button, .admin-download-button { border-radius: 999px; font-weight: 700; transition: filter .2s ease, transform .2s ease; }
 .admin-login-form button { margin-top: .8rem; padding: .8rem 1.2rem; border: 1px solid #342683; background: #342683; color: #fff; }
-.admin-login-form button:hover, .admin-secondary-button:hover, .admin-logout-button:hover, .admin-detail-button:hover, .admin-delete-button:hover:not(:disabled), .admin-download-button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.admin-login-form button:hover, .admin-secondary-button:hover, .admin-logout-button:hover, .admin-detail-button:hover, .admin-accept-button:hover:not(:disabled), .admin-delete-button:hover:not(:disabled), .admin-download-button:hover { filter: brightness(1.08); transform: translateY(-1px); }
 .admin-error { margin: .25rem 0 0; color: #b42318; font-size: .9rem; font-weight: 600; }
 .admin-loading { margin: 20vh auto; color: #342683; font-weight: 700; text-align: center; }
 
@@ -56,6 +56,12 @@
 .admin-table-wrapper td span { margin-top: .22rem; color: #716b7d; font-size: .82rem; }
 .admin-row-actions { display: grid; gap: .45rem; }
 .admin-detail-button { padding: .48rem .85rem; border: 1px solid #342683; background: #f4f2ff; color: #342683; font-size: .82rem; }
+.admin-accept-button { padding: .48rem .85rem; border: 1px solid #187e3b; background: #ecf9f0; color: #176b35; font-size: .82rem; }
+.admin-accept-button:disabled { cursor: not-allowed; opacity: .55; }
+.admin-accepted-status, .admin-action-success, .admin-action-error { display: block; font-size: .76rem; font-weight: 700; text-align: center; }
+.admin-accepted-status { padding: .5rem .7rem; border-radius: 999px; background: #e7f7ec; color: #176b35; }
+.admin-action-success { color: #176b35; }
+.admin-action-error { color: #b42318; }
 .admin-delete-button { padding: .48rem .85rem; border: 1px solid #d92d20; background: #fff5f4; color: #b42318; font-size: .82rem; }
 .admin-empty { padding: 2rem !important; color: #716b7d !important; text-align: center; }
 

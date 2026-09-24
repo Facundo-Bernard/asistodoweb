@@ -1,4 +1,4 @@
-import httpClient, { API_URIS } from "../../../api/httpClient";
+import httpClient, { appHttpClient, API_URIS, APP_URIS } from "../../../api/httpClient";
 
 export async function loginAdministrator(credentials) {
   const { data } = await httpClient.post(API_URIS.auth.login, credentials);
@@ -26,6 +26,11 @@ export async function getCandidatePaperwork(paperworkPath) {
   const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] || "papeleria";
 
   return { blob: data, filename };
+}
+
+export async function importAcceptedPerson(persona) {
+  const { data } = await appHttpClient.post(APP_URIS.people.import, { persona });
+  return data;
 }
 
 export async function removeCandidate(id) {

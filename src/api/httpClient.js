@@ -15,16 +15,30 @@ export const API_URIS = Object.freeze({
   },
 });
 
+export const APP_URIS = Object.freeze({
+  people: {
+    import: "/api/personas/importar",
+  },
+});
+
 const httpClient = axios.create({
   baseURL: apiBaseUrl,
   headers: { Accept: "application/json" },
 });
 
-httpClient.interceptors.request.use((config) => {
+const addStoredAuthorization = (config) => {
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
+};
+
+httpClient.interceptors.request.use(addStoredAuthorization);
+
+export const appHttpClient = axios.create({
+  headers: { Accept: "application/json" },
 });
+
+appHttpClient.interceptors.request.use(addStoredAuthorization);
 
 export const saveAccessToken = (token) => localStorage.setItem(TOKEN_KEY, token);
 export const clearAccessToken = () => localStorage.removeItem(TOKEN_KEY);

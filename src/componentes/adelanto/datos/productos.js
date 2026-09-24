@@ -8,6 +8,33 @@ export const BANKS = [
 
 export const ELIGIBLE_BANK_IDS = new Set(["nacion", "provincia"]);
 
+const SERVICE_PLAN_IDS = Object.freeze({
+  "ANSES Signature:100000": 1306,
+  "ANSES Signature:150000": 1307,
+  "ANSES Signature:200000": 1301,
+  "ANSES Signature:240000": 1302,
+  "ANSES Signature:300000": 1308,
+  "Asistodo:100000": 1310,
+  "Asistodo:150000": 1311,
+  "Asistodo:200000": 1312,
+  "Asistodo:250000": 1313,
+  "Asistodo:300000": 1314,
+  "Asistodo:350000": 1315,
+  "Asistodo:400000": 1316,
+  "Asistodo:450000": 1317,
+  "Asistodo:500000": 1318,
+  "Asistodo:550000": 1319,
+  "Asistodo:600000": 1320,
+  "Asistodo:650000": 1321,
+  "Asistodo:700000": 1322,
+  "Asistodo:750000": 1323,
+  "Asistodo:800000": 1324,
+  "Asistodo:850000": 1325,
+  "Asistodo:900000": 1326,
+  "Asistodo:950000": 1327,
+  "Asistodo:1000000": 1328,
+});
+
 const ANSES_SIGNATURE_PRODUCTS = [
   { id: "signature-100", amount: 100000, installments: [{ months: 18, payment: 17129 }] },
   { id: "signature-150", amount: 150000, installments: [{ months: 18, payment: 25750 }] },
@@ -43,6 +70,11 @@ export const formatCurrency = (amount) => new Intl.NumberFormat("es-AR", {
   currency: "ARS",
   maximumFractionDigits: 0,
 }).format(amount);
+
+export function getExternalServicePlanId(product) {
+  if (!product?.familia || !product?.monto) return null;
+  return SERVICE_PLAN_IDS[`${product.familia}:${Number(product.monto)}`] || null;
+}
 
 export function getAvailableProductGroups({ employment, income }) {
   const productsWithAffordableInstallments = (products) => products

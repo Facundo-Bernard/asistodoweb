@@ -5,12 +5,15 @@ import {
   getCandidatePaperwork,
   getCandidates,
   getCurrentUser,
+  importAcceptedPerson,
   loginAdministrator,
   removeCandidate,
 } from "./adminApi";
+import { buildExternalPerson } from "./personaImportMapper";
 import "./ADMINISTRATIVO.css";
 
 const EMPTY_PAPERWORK = { status: "idle", error: "", url: "", type: "", filename: "" };
+const ACCEPTED_CANDIDATES_KEY = "coopyaAcceptedCandidates";
 
 const formatCurrency = (amount) => new Intl.NumberFormat("es-AR", {
   style: "currency",
@@ -24,9 +27,18 @@ const formatDate = (value) => {
   return Number.isNaN(date.getTime()) ? "Sin fecha" : date.toLocaleString("es-AR");
 };
 
-const getErrorMessage = (error, fallback) => error.response?.data?.detail || fallback;
+const getErrorMessage = (error, fallback) => error.response?.data?.detail || error.message || fallback;
 const employmentLabels = { working: "Trabaja", retired: "Jubilado/a", graciable: "Pensión graciable" };
 const genderLabels = { male: "Hombre", female: "Mujer" };
+
+const getStoredAcceptedCandidateIds = () => {
+  try {
+    const storedIds = JSON.parse(localStorage.getItem(ACCEPTED_CANDIDATES_KEY) || "[]");
+    return Array.isArray(storedIds) ? storedIds : [];
+  } catch {
+    return [];
+  }
+};
 
 export default function Administrativo() {
   const [credentials, setCredentials] = useState({ email: "", password: "" });
@@ -42,6 +54,10 @@ export default function Administrativo() {
   const [detailStatus, setDetailStatus] = useState("idle");
   const [detailError, setDetailError] = useState("");
   const [paperwork, setPaperwork] = useState(EMPTY_PAPERWORK);
+  const [acceptingId, setAcceptingId] = useState("");
+  const [acceptedCandidateIds, setAcceptedCandidateIds] = useState(getStoredAcceptedCandidateIds);
+  const [acceptanceError, setAcceptanceError] = useState({ id: "", message: "" });
+  const [acceptanceMessage, setAcceptanceMessage] = useState({ id: "", message: "" });
   const detailRequestId = useRef(0);
 
   useEffect(() => () => {
@@ -177,6 +193,43 @@ export default function Administrativo() {
     }
   };
 
+  const markCandidateAsAccepted = (candidateId) => {
+    setAcceptedCandidateIds((current) => {
+      const next = current.includes(candidateId) ? current : [...current, candidateId];
+      localStorage.setItem(ACCEPTED_CANDIDATES_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleAccept = async (candidate) => {
+    if (acceptedCandidateIds.includes(candidate.id)) return;
+
+    const confirmed = window.confirm(`¿Aceptar a ${candidate.nombreCompleto} e importar sus datos en Coopya?`);
+    if (!confirmed) return;
+
+    setAcceptingId(candidate.id);
+    setAcceptanceError({ id: "", message: "" });
+    setAcceptanceMessage({ id: "", message: "" });
+
+    try {
+      const fullCandidate = await getCandidate(candidate.id);
+      const result = await importAcceptedPerson(buildExternalPerson(fullCandidate));
+      const importedPerson = result.resultados?.[0];
+      const operation = importedPerson?.operacion?.toLowerCase() || "importación";
+      const oracleOperation = result.oracle?.operacion?.toLowerCase();
+
+      markCandidateAsAccepted(candidate.id);
+      setAcceptanceMessage({
+        id: candidate.id,
+        message: `Persona aceptada: ${operation}${oracleOperation ? ` · Oracle: ${oracleOperation}.` : "."}`,
+      });
+    } catch (error) {
+      setAcceptanceError({ id: candidate.id, message: getErrorMessage(error, "No pudimos aceptar la solicitud.") });
+    } finally {
+      setAcceptingId("");
+    }
+  };
+
   if (checkingSession) {
     return <main className="admin-page"><p className="admin-loading">Cargando panel administrativo...</p></main>;
   }
@@ -270,6 +323,7 @@ export default function Administrativo() {
                 <tr><td colSpan="7" className="admin-empty">No hay solicitudes para mostrar.</td></tr>
               ) : filteredCandidates.map((candidate) => {
                 const product = candidate.productoSeleccionado || {};
+                const wasAccepted = acceptedCandidateIds.includes(candidate.id);
                 return (
                   <tr key={candidate.id}>
                     <td>
@@ -295,6 +349,18 @@ export default function Administrativo() {
                         <button type="button" className="admin-detail-button" onClick={() => handleViewDetail(candidate)}>
                           Ver detalle
                         </button>
+                        {wasAccepted ? (
+                          <span className="admin-accepted-status">Persona aceptada</span>
+                        ) : (
+                          <button
+                            type="button"
+                            className="admin-accept-button"
+                            onClick={() => handleAccept(candidate)}
+                            disabled={acceptingId === candidate.id}
+                          >
+                            {acceptingId === candidate.id ? "Aceptando..." : "Aceptar persona"}
+                          </button>
+                        )}
                         <button
                           type="button"
                           className="admin-delete-button"
@@ -303,6 +369,8 @@ export default function Administrativo() {
                         >
                           {deletingId === candidate.id ? "Eliminando..." : "Eliminar"}
                         </button>
+                        {acceptanceMessage.id === candidate.id && <span className="admin-action-success">{acceptanceMessage.message}</span>}
+                        {acceptanceError.id === candidate.id && <span className="admin-action-error">{acceptanceError.message}</span>}
                       </div>
                     </td>
                   </tr>
