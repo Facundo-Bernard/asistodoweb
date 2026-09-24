@@ -13,6 +13,13 @@ const getErrorDetail = (body, fallback) => {
   return fallback;
 };
 
+const getOracleErrorDetail = (error) => {
+  const message = String(error?.message || "");
+  const oracleError = message.match(/(?:ORA|NJS|DPI)-\d+:[^\r\n]*/i)?.[0];
+
+  return oracleError || message.slice(0, 300) || "Oracle no devolvió un detalle técnico.";
+};
+
 export default {
   async fetch(request) {
     if (request.method !== "POST") {
@@ -26,7 +33,12 @@ export default {
 
     if (!authorization) return json({ detail: "Sesión de administrador requerida." }, 401);
     if (!candidatesApiUrl || !importToken) return json({ detail: "La importación aún no está configurada." }, 503);
-    if (oracleConfigurationError) return json({ detail: oracleConfigurationError }, 503);
+    if (oracleConfigurationError) {
+      return json({
+        detail: oracleConfigurationError,
+        oracle: { confirmed: false, stage: "configuracion", detail: oracleConfigurationError },
+      }, 503);
+    }
 
     try {
       const sessionResponse = await fetch(`${candidatesApiUrl}/api/v1/auth/me`, {
@@ -59,11 +71,18 @@ export default {
 
       try {
         const oracle = await importPersonIntoOracle(body.persona);
-        return json({ ...result, oracle }, 200);
+        return json({ ...result, oracle: { confirmed: true, ...oracle } }, 200);
       } catch (error) {
+        const oracleDetail = getOracleErrorDetail(error);
         console.error("No se pudo sincronizar la persona aceptada en Oracle.", error?.code || error?.name);
         return json({
-          detail: "La persona se registró en Coopya, pero no pudimos sincronizarla en Oracle. Volvé a intentar.",
+          detail: `Coopya importó la persona, pero Oracle no la confirmó: ${oracleDetail}`,
+          oracle: {
+            confirmed: false,
+            stage: "sincronizacion",
+            code: error?.code || null,
+            detail: oracleDetail,
+          },
         }, 502);
       }
     } catch {

@@ -29,7 +29,13 @@ export async function getCandidatePaperwork(paperworkPath) {
 }
 
 export async function importAcceptedPerson(persona) {
-  const { data } = await appHttpClient.post(APP_URIS.people.import, { persona });
+  const { data, headers } = await appHttpClient.post(APP_URIS.people.import, { persona });
+
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    const contentType = headers["content-type"] || "contenido no identificable";
+    throw new Error(`El endpoint de aceptación respondió ${contentType} en vez de la confirmación de Oracle. Verificá el último deploy de Vercel.`);
+  }
+
   return data;
 }
 

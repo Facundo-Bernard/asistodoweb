@@ -15,30 +15,43 @@ const nullableNumber = (value) => {
   return Number.isFinite(number) ? number : null;
 };
 
+const configurationFieldLabels = {
+  user: "usuario",
+  password: "contraseña",
+  connectString: "connectString",
+  personTypeId: "personTypeId",
+  personStatusId: "personStatusId",
+};
+
 const readOracleConfiguration = () => {
   const rawConfiguration = nullableText(process.env.COOPYA_ORACLE_CONFIG);
-  if (!rawConfiguration) return { error: "La sincronización con Oracle aún no está configurada." };
+  if (!rawConfiguration) {
+    return { error: "Falta configurar COOPYA_ORACLE_CONFIG en Vercel." };
+  }
 
   try {
     const configuration = JSON.parse(rawConfiguration);
     if (!configuration || Array.isArray(configuration)) {
-      return { error: "La configuración de Oracle no es válida." };
+      return { error: "COOPYA_ORACLE_CONFIG debe ser un objeto JSON válido." };
     }
 
     const requiredKeys = ["user", "password", "connectString", "personTypeId", "personStatusId"];
-    if (requiredKeys.some((key) => !nullableText(configuration[key]))) {
-      return { error: "La sincronización con Oracle aún no está configurada." };
+    const missing = requiredKeys.filter((key) => !nullableText(configuration[key]));
+    if (missing.length) {
+      return {
+        error: `Faltan datos en COOPYA_ORACLE_CONFIG: ${missing.map((key) => configurationFieldLabels[key]).join(", ")}.`,
+      };
     }
 
     return { configuration, error: "" };
   } catch {
-    return { error: "La configuración de Oracle no es válida." };
+    return { error: "COOPYA_ORACLE_CONFIG no contiene JSON válido." };
   }
 };
 
 export function getOracleConfigurationError() {
   if (!nullableText(process.env.COOPYA_IMPORT_TOKEN)) {
-    return "La sincronización con Oracle aún no está configurada.";
+    return "Falta configurar COOPYA_IMPORT_TOKEN en Vercel.";
   }
 
   return readOracleConfiguration().error;
@@ -47,7 +60,7 @@ export function getOracleConfigurationError() {
 export async function importPersonIntoOracle(persona) {
   const { configuration, error: configurationError } = readOracleConfiguration();
   if (configurationError) throw new Error(configurationError);
-  if (!nullableText(process.env.COOPYA_IMPORT_TOKEN)) throw new Error("La sincronización con Oracle aún no está configurada.");
+  if (!nullableText(process.env.COOPYA_IMPORT_TOKEN)) throw new Error("Falta configurar COOPYA_IMPORT_TOKEN en Vercel.");
 
   let connection;
 

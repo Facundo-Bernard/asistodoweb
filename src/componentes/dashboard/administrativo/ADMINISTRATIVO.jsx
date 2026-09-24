@@ -218,8 +218,12 @@ export default function Administrativo() {
       const operation = importedPerson?.operacion?.toLowerCase() || "importación";
       const oracleOperation = result.oracle?.operacion?.toLowerCase();
 
-      if (!result.oracle?.idPersona || !oracleOperation) {
-        throw new Error("Coopya respondió, pero Oracle no confirmó la creación de la persona. La solicitud sigue pendiente.");
+      if (!result.oracle) {
+        throw new Error("El endpoint de aceptación no devolvió la confirmación de Oracle. Verificá que Vercel haya publicado la función más reciente.");
+      }
+
+      if (!result.oracle.confirmed || !result.oracle.idPersona || !oracleOperation) {
+        throw new Error(result.oracle.detail || "Oracle no confirmó la creación de la persona. La solicitud sigue pendiente.");
       }
 
       markCandidateAsAccepted(candidate.id);
