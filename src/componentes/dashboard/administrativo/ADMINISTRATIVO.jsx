@@ -218,6 +218,10 @@ export default function Administrativo() {
       const operation = importedPerson?.operacion?.toLowerCase() || "importación";
       const oracleOperation = result.oracle?.operacion?.toLowerCase();
 
+      if (!result.oracle?.idPersona || !oracleOperation) {
+        throw new Error("Coopya respondió, pero Oracle no confirmó la creación de la persona. La solicitud sigue pendiente.");
+      }
+
       markCandidateAsAccepted(candidate.id);
       setAcceptanceMessage({
         id: candidate.id,
