@@ -10,10 +10,11 @@ import {
   removeCandidate,
 } from "./adminApi";
 import { buildExternalPerson } from "./personaImportMapper";
+import { logImportDiagnostic, preparationDiagnostic } from "./personImportDiagnostics.js";
 import "./ADMINISTRATIVO.css";
 
 const EMPTY_PAPERWORK = { status: "idle", error: "", url: "", type: "", filename: "" };
-const ACCEPTED_CANDIDATES_KEY = "coopyaAcceptedCandidates";
+const ACCEPTED_CANDIDATES_KEY = "coopyaOracleVerifiedCandidates";
 
 const formatCurrency = (amount) => new Intl.NumberFormat("es-AR", {
   style: "currency",
@@ -59,6 +60,7 @@ export default function Administrativo() {
   const [acceptanceError, setAcceptanceError] = useState({ id: "", message: "" });
   const [acceptanceMessage, setAcceptanceMessage] = useState({ id: "", message: "" });
   const detailRequestId = useRef(0);
+  const acceptanceInFlight = useRef(false);
 
   useEffect(() => () => {
     if (paperwork.url) URL.revokeObjectURL(paperwork.url);
@@ -196,44 +198,42 @@ export default function Administrativo() {
   const markCandidateAsAccepted = (candidateId) => {
     setAcceptedCandidateIds((current) => {
       const next = current.includes(candidateId) ? current : [...current, candidateId];
-      localStorage.setItem(ACCEPTED_CANDIDATES_KEY, JSON.stringify(next));
+      try { localStorage.setItem(ACCEPTED_CANDIDATES_KEY, JSON.stringify(next)); } catch {
+        console.warn("La aceptación fue confirmada, pero el navegador no pudo guardar el indicador local.");
+      }
       return next;
     });
   };
 
   const handleAccept = async (candidate) => {
-    if (acceptedCandidateIds.includes(candidate.id)) return;
+    if (acceptanceInFlight.current || acceptedCandidateIds.includes(candidate.id)) return;
 
-    const confirmed = window.confirm(`¿Aceptar a ${candidate.nombreCompleto} e importar sus datos en Coopya?`);
+    const confirmed = window.confirm(`¿Aceptar a ${candidate.nombreCompleto} e importar sus datos en Coopya y Oracle?`);
     if (!confirmed) return;
 
+    acceptanceInFlight.current = true;
     setAcceptingId(candidate.id);
     setAcceptanceError({ id: "", message: "" });
     setAcceptanceMessage({ id: "", message: "" });
 
+    const requestId = crypto.randomUUID();
+    let stage = "cargar_solicitud";
     try {
       const fullCandidate = await getCandidate(candidate.id);
-      const result = await importAcceptedPerson(buildExternalPerson(fullCandidate));
-      const importedPerson = result.resultados?.[0];
-      const operation = importedPerson?.operacion?.toLowerCase() || "importación";
-      const oracleOperation = result.oracle?.operacion?.toLowerCase();
-
-      if (!result.oracle) {
-        throw new Error("El endpoint de aceptación no devolvió la confirmación de Oracle. Verificá que Vercel haya publicado la función más reciente.");
-      }
-
-      if (!result.oracle.confirmed || !result.oracle.idPersona || !oracleOperation) {
-        throw new Error(result.oracle.detail || "Oracle no confirmó la creación de la persona. La solicitud sigue pendiente.");
-      }
-
+      stage = "preparar_datos";
+      const persona = buildExternalPerson(fullCandidate);
+      const result = await importAcceptedPerson(persona, { requestId });
       markCandidateAsAccepted(candidate.id);
       setAcceptanceMessage({
         id: candidate.id,
-        message: `Persona aceptada: ${operation}${oracleOperation ? ` · Oracle: ${oracleOperation}.` : "."}`,
+        message: `Persona verificada en Oracle: ID ${result.oracle.idPersona} · ${result.oracle.operacion.toLowerCase()}.`,
       });
     } catch (error) {
-      setAcceptanceError({ id: candidate.id, message: getErrorMessage(error, "No pudimos aceptar la solicitud.") });
+      const diagnostic = error.diagnostic || preparationDiagnostic(error, stage, requestId);
+      if (!error.diagnostic) logImportDiagnostic(diagnostic);
+      setAcceptanceError({ id: candidate.id, message: diagnostic.detail, diagnostic });
     } finally {
+      acceptanceInFlight.current = false;
       setAcceptingId("");
     }
   };
@@ -364,7 +364,7 @@ export default function Administrativo() {
                             type="button"
                             className="admin-accept-button"
                             onClick={() => handleAccept(candidate)}
-                            disabled={acceptingId === candidate.id}
+                            disabled={Boolean(acceptingId)}
                           >
                             {acceptingId === candidate.id ? "Aceptando..." : "Aceptar persona"}
                           </button>
@@ -378,7 +378,17 @@ export default function Administrativo() {
                           {deletingId === candidate.id ? "Eliminando..." : "Eliminar"}
                         </button>
                         {acceptanceMessage.id === candidate.id && <span className="admin-action-success">{acceptanceMessage.message}</span>}
-                        {acceptanceError.id === candidate.id && <span className="admin-action-error">{acceptanceError.message}</span>}
+                        {acceptanceError.id === candidate.id && (
+                          <div className="admin-action-error" role="alert">
+                            <span>{acceptanceError.message}</span>
+                            {acceptanceError.diagnostic && <details className="admin-error-diagnostic">
+                              <summary>Ver diagnóstico</summary>
+                              <p>Etapa: {acceptanceError.diagnostic.stage} · Código: {acceptanceError.diagnostic.code}</p>
+                              <p>{acceptanceError.diagnostic.hint}</p>
+                              <pre>{JSON.stringify(acceptanceError.diagnostic, null, 2)}</pre>
+                            </details>}
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>

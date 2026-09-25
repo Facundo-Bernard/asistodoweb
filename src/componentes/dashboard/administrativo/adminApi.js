@@ -1,4 +1,5 @@
 import httpClient, { appHttpClient, API_URIS, APP_URIS } from "../../../api/httpClient";
+import { sendPersonImport } from "./personImportDiagnostics.js";
 
 export async function loginAdministrator(credentials) {
   const { data } = await httpClient.post(API_URIS.auth.login, credentials);
@@ -28,15 +29,8 @@ export async function getCandidatePaperwork(paperworkPath) {
   return { blob: data, filename };
 }
 
-export async function importAcceptedPerson(persona) {
-  const { data, headers } = await appHttpClient.post(APP_URIS.people.import, { persona });
-
-  if (!data || typeof data !== "object" || Array.isArray(data)) {
-    const contentType = headers["content-type"] || "contenido no identificable";
-    throw new Error(`El endpoint de aceptación respondió ${contentType} en vez de la confirmación de Oracle. Verificá el último deploy de Vercel.`);
-  }
-
-  return data;
+export async function importAcceptedPerson(persona, options) {
+  return sendPersonImport(appHttpClient, APP_URIS.people.import, persona, options);
 }
 
 export async function removeCandidate(id) {

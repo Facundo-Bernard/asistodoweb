@@ -1,7 +1,10 @@
 {
+  "functions": {
+    "api/personas/importar.js": { "maxDuration": 120 }
+  },
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api(?:/|$)).*)",
       "destination": "/index.html"
     }
   ]
