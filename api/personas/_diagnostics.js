@@ -71,7 +71,7 @@ export function errorHint(error, codes, stage) {
   if (/ORA-00001/.test(all)) return "Hay una clave duplicada. Verificá DNI y la secuencia IDPERSONA antes de reintentar.";
   if (/TIMEOUT|ETIMEDOUT|ECONNREFUSED|NJS-5\d\d|ORA-12170|ORA-12541/.test(all)) return "Revisá host, puerto, listener y acceso de red desde Vercel. Si se cortó durante la escritura, comprobá la tabla antes de reintentar.";
   if (stage === "coopya") return "Revisá el detalle del rechazo de Coopya: token, campos y plan seleccionado. Oracle todavía no fue ejecutado.";
-  return "Buscá el identificador del intento en los logs de Vercel para revisar la etapa indicada.";
+  return "Buscá el identificador del intento en la terminal local o en los logs de Vercel para revisar la etapa indicada.";
 }
 
 export function createDiagnostics(request, env = process.env, logger = console) {

@@ -27,6 +27,8 @@ function responseDiagnostic(response, requestId) {
     upstreamStatus: trace.upstreamStatus ?? null,
     progress: trace.progress || null,
     database: trace.database || null,
+    transport: trace.transport || null,
+    execution: trace.execution || null,
     technical: trace.technical || null,
     hint: trace.hint || "Revisá que /api/personas/importar se ejecute como función en el mismo dominio del panel.",
     events: trace.events || [],
@@ -56,10 +58,10 @@ export function preparationDiagnostic(error, stage, requestId) {
   diagnostic.code = stage === "cargar_solicitud" ? "CANDIDATE_READ_FAILED" : "PERSON_MAPPING_FAILED";
   diagnostic.detail = stage === "cargar_solicitud"
     ? "No se pudieron cargar los datos completos de la solicitud. La importación no fue enviada."
-    : "No se pudieron preparar los datos o identificar el plan de la solicitud. La importación no fue enviada.";
+    : "No se pudieron preparar los datos personales de la solicitud. La importación no fue enviada.";
   diagnostic.hint = stage === "cargar_solicitud"
     ? "Revisá la sesión y el estado HTTP de la API de solicitudes."
-    : "Revisá productoSeleccionado y su correspondencia con los planes configurados.";
+    : "Revisá nombre, apellido, DNI y datos personales de la solicitud.";
   return diagnostic;
 }
 
@@ -76,7 +78,7 @@ export async function sendPersonImport(client, endpoint, persona, { logger = con
       diagnostic.code = error.code === "ECONNABORTED" ? "BROWSER_TIMEOUT" : "NETWORK_ERROR";
       diagnostic.stage = "red_navegador";
       diagnostic.detail = "No se recibió respuesta del servidor. El resultado de la importación es desconocido.";
-      diagnostic.hint = "Revisá Network y los logs de Vercel con este identificador. No reintentes sin comprobar si hubo una escritura.";
+      diagnostic.hint = "Revisá Network y la terminal local o los logs de Vercel con este identificador. No reintentes sin comprobar si hubo una escritura.";
     } else if (!diagnostic.detail) {
       diagnostic.detail = `La ruta de aceptación respondió HTTP ${error.response.status} sin un diagnóstico del servicio de importación.`;
     }

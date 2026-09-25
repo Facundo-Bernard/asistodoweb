@@ -1,58 +1,124 @@
-# Aceptación de solicitudes
+# Aceptación de solicitudes mediante ORDS (Linux)
 
-La aceptación se ejecuta en `POST /api/personas/importar` del mismo dominio del panel. El servidor valida la sesión de administrador, la configuración y los datos; después importa en Coopya, llama a `API_IMPORTAR_PERSONA` y consulta `PERSONA` por el ID devuelto y el documento enviado. Solamente esa verificación permite marcar la solicitud como aceptada.
+El panel llama con Axios a `POST /api/personas/importar` en su mismo origen.
+El backend valida la sesión de administrador con la API de solicitudes y manda
+una única petición a ORDS. No llama a la API de importación de Coopya, no abre una
+conexión TCP a Oracle y nunca envía el token de importación al navegador.
 
-## Configuración real
+El producto y la documentación siguen en la solicitud. Este flujo solo crea o
+actualiza PERSONA; no crea contratos ni asocia planes/servicios en otras tablas.
+Los IDs de tipo/estado/prestador se definen en el handler Oracle instalado.
 
-Usar `.env.example` como referencia. En Vercel, cada nombre y valor van en campos separados. `COOPYA_ORACLE_CONFIG` contiene solo un objeto JSON, sin el nombre de la variable, sin `=` y sin comillas externas. Los cambios en variables requieren un nuevo deployment en el ambiente correspondiente.
+## Probar desde la oficina
 
-- `COOPYA_IMPORT_TOKEN`: la misma credencial que valida el procedimiento, privada.
-- `COOPYA_ORACLE_CONFIG`: usuario, contraseña, conexión e IDs internos. `host:1521/servicio` es un ejemplo que se rechaza, no una conexión utilizable. Copiar los datos reales de Toad. Para Service Name: `HOST_REAL:PUERTO_REAL/SERVICE_NAME_REAL`. Para SID: `(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=HOST_REAL)(PORT=PUERTO_REAL))(CONNECT_DATA=(SID=SID_REAL)))`.
-- `VITE_API_BASE_URL` (o `COOPYA_CANDIDATES_API_URL` en el servidor): URL HTTPS de la API de solicitudes/autenticación.
-- `COOPYA_PERSONAS_IMPORT_URL`: opcional; por defecto se conserva el endpoint **de pruebas** `https://test.coopya.com.ar/Personas/ImportarPersonasApi`.
+Requisitos: Node 22.12+ (o una versión compatible con Vite 7), acceso a la red/VPN,
+ORDS funcionando y usuario administrador del panel. No usar datos reales hasta
+confirmar cómo afecta la restauración nocturna del Linux.
 
-`personTypeId`, `personStatusId` y `providerId` deben existir en los catálogos internos de Oracle; los números de ejemplos previos no verifican esas equivalencias. `postalCodeId` es el ID interno, no el código postal literal. La base debe ser accesible desde Vercel por la red configurada. No se debe abrir indiscriminadamente el listener a Internet para resolver conectividad.
+1. Instalar dependencias con `npm ci` si es un checkout nuevo.
+2. Copiar `.env.example` a `.env` y completar `COOPYA_IMPORT_TOKEN` con el token
+   configurado en Oracle. Conservar el `.env` existente si ya tiene el token.
+3. Crear `.env.development.local` (ignorado por Git) con:
 
-El driver usa Thin (Oracle 12.1+). Si la base es realmente 11g, se necesita un backend con Oracle Client y modo Thick; cambiar el connectString no resuelve esa incompatibilidad. Referencias: [conexión Oracle](https://node-oracledb.readthedocs.io/en/latest/user_guide/connection_handling.html), [modos del driver](https://node-oracledb.readthedocs.io/en/latest/user_guide/appendix_a.html).
+   ```dotenv
+   COOPYA_ORDS_URL=http://172.17.1.4:8080/ords/prestaprod/asistodo/personas
+   ```
 
-## Diagnóstico
+4. Ejecutar `npm run dev` y abrir la dirección local indicada, ruta
+   `/admin/solicitudes`. Iniciar sesión como administrador.
 
-En DevTools → Console, expandir `[Aceptación IDENTIFICADOR]`. Se informa la etapa, código, HTTP local y externo, versiones, commit desplegado, duración de etapas, errores ORA/NJS/DPI/PLS, causa de red, estado parcial y sugerencia. El panel también permite expandir «Ver diagnóstico».
+Vite ejecuta el mismo backend de aceptación mediante middleware Node. La petición
+a ORDS sale de esta computadora. El navegador nunca conecta directamente al puerto
+8080; no es necesario habilitar CORS en ORDS para este flujo. Reiniciar el servidor
+local si se cambian variables. `npm run preview` no ejecuta el backend.
 
-En Vercel → Logs, buscar ese mismo identificador. Los logs son JSON con `requestId`, `stage` y `event`. No se registran el cuerpo enviado, headers de autenticación, binds, claves ni tokens. Los mensajes técnicos se filtran para ocultar valores de la persona.
+`GET /api/personas/importar` devuelve versión y `transport: "ords"` sin hacer
+escrituras ni mostrar credenciales. No comprueba la conectividad de Oracle.
 
-`GET /api/personas/importar` informa servicio y versión sin ejecutar escrituras ni revelar configuración. Confirma que se publicó la función, no que la conexión esté lista. El fallback del sitio excluye `/api` para no devolver HTML como si fuera una respuesta de aceptación.
+## Vercel
 
-Un rechazo de Coopya enviado con HTTP 200 ahora se convierte en HTTP 502 y conserva el motivo filtrado. No se debe interpretar `HTTP 200` por sí solo como aceptación.
+En Project Settings → Environment Variables → Production:
 
-Los dos sistemas no comparten una transacción. Si Coopya terminó y Oracle falló, el diagnóstico lo informa. Si hay un timeout después de enviar una escritura, el resultado puede ser desconocido: verificar antes de reintentar. No hay reintentos automáticos ni garantía de exclusión entre navegadores.
+| Nombre | Valor |
+| --- | --- |
+| `VITE_API_BASE_URL` | `https://ticketera-backend-production-a834.up.railway.app` |
+| `COOPYA_IMPORT_TOKEN` | Token de importación existente, privado |
+| `COOPYA_ORDS_URL` | URL HTTPS completa de la API ORDS publicada |
 
-El indicador de aceptación se guarda localmente en el navegador, no en la API de solicitudes. Los indicadores viejos sin verificación Oracle no se reutilizan. No sustituye una consulta a la base.
+Todavía no se identificó/publicó la URL HTTPS real. No inventar el dominio, no usar
+el dominio del frontend como si alojara ORDS y no cargar la IP privada en Vercel.
+El servidor detecta la IP privada literal y HTTP en despliegues y devuelve un error
+de configuración antes de enviar datos. Tampoco se permite HTTP público en local.
+Esta política no contempla una futura red privada de Vercel: requerirá una revisión
+explícita cuando esa red exista. Un hostname público que resuelva a una IP privada
+no se vuelve alcanzable por cambiar su nombre.
 
-## Verificar en Toad
+Después de cargar las variables se necesita un nuevo deployment. No se requieren
+usuario ni contraseña Oracle en Vercel. `COOPYA_ORACLE_CONFIG` y
+`COOPYA_PERSONAS_IMPORT_URL` son heredadas y se ignoran; se pueden quitar de Vercel
+después de desplegar esta versión. El token nunca debe llevar prefijo `VITE_`.
 
-Consultar el destino de la sesión y compararlo con `database` del diagnóstico:
+## Contrato ORDS instalado mediante el bloque simple del chat
 
-```sql
-SELECT SYS_CONTEXT('USERENV', 'DB_NAME') AS BASE,
-       SYS_CONTEXT('USERENV', 'SERVICE_NAME') AS SERVICIO,
-       SYS_CONTEXT('USERENV', 'CURRENT_SCHEMA') AS ESQUEMA,
-       SYS_CONTEXT('USERENV', 'SERVER_HOST') AS SERVIDOR
-FROM DUAL;
+Ruta local: `POST /ords/prestaprod/asistodo/personas`.
+Cabeceras: `Content-Type: application/json`, `X-Import-Token: <secreto>`.
+Cuerpo: la persona directamente en la raíz, SIN `{ persona: ... }` ni
+`{ token, personas: [...] }`. Los faltantes viajan como null; se normalizan números,
+fechas y textos. Solo se envían campos de PERSONA, no campos de planes de Coopya.
+
+```json
+{
+  "TipoDoc": 1,
+  "NumeroDoc": "12345678",
+  "Apellido": "PRUEBA",
+  "Nombre": "PERSONA",
+  "FechaNac": null,
+  "Sexo": "2",
+  "Remuneracion": 400000,
+  "Mail": "prueba@example.com"
+}
 ```
 
-Consultar por el documento real (parámetro bind), no por la primera página de `SELECT *`:
+Se exige HTTP 2xx y una respuesta como:
 
-```sql
-SELECT IDPERSONA, IDDOCUMENTO_TIPO, DOCUMENTO_NRO, APELLIDO, NOMBRE
-FROM PERSONA
-WHERE DOCUMENTO_NRO = :dni;
+```json
+{
+  "ok": true,
+  "oracle": {
+    "confirmed": true,
+    "verified": true,
+    "idPersona": 123,
+    "operacion": "INSERCION"
+  }
+}
 ```
 
-No se despliega ni se modifica el procedimiento Oracle desde este proyecto. Su versión instalada controla cómo actualiza campos existentes, incluidos los vacíos.
+`ACTUALIZACION` también es válida si la verifica el procedimiento. HTTP 200 solo,
+un ID sin verificación o "Documento ya existente" NO equivalen a éxito.
+El backend depende de que ORDS realmente valide el token, confirme la transacción
+y verifique la fila: no tiene una segunda conexión independiente a la base.
 
-## Verificaciones locales
+Los scripts alternativos en `docs/oracle19c` usan `/asistodo/v1/personas` y un
+envoltorio `{persona: ...}`. No son el contrato de esta integración: no sustituir
+solo la URL por esa ruta sin adaptar el contrato. No reinstalarlos para probar
+esta web si ya se ejecutó el bloque simple.
 
-`node --test tests/personImport.test.mjs` ejecuta pruebas aisladas de rechazos HTTP 200, credenciales, configuración inválida, logs sin secretos, fallas del procedimiento y confirmación real mediante lectura simulada. No inserta personas en servicios reales.
+## Errores y seguridad
 
-`npm run dev` ejecuta solo Vite. Para probar la función localmente, usar el entorno de funciones de Vercel (`vercel dev`) o un deployment de prueba con la configuración de ese ambiente. La validación de respuesta detecta un servidor que solo devuelve HTML.
+Los diagnósticos conservan requestId, etapa, HTTP externo y códigos Oracle, pero
+ocultan token, sesión, contraseña y datos de la persona. No se sigue ninguna
+redirección ni se hacen reintentos automáticos (evita repetir una escritura).
+Una desconexión o timeout puede ocurrir después del COMMIT: consultar PERSONA
+antes de reintentar. La solicitud queda sin indicador de aceptación en ese caso.
+
+Los indicadores de aceptación son solo de esta sesión del navegador, no un estado
+persistido en la API de solicitudes ni una consulta en vivo a PERSONA. No se
+reutilizan los indicadores viejos de Coopya. Las restauraciones de Linux pueden
+eliminar personas/configuración; confirmar con el administrador antes de uso real.
+
+Publicar solamente la ruta de la API con HTTPS y autenticación, no SQL Developer
+Web ni el listener 1521. HTTP local transmite datos/token por la red interna sin
+cifrar: utilizarlo solo como prueba en red confiable/VPN, no como publicación.
+
+Pruebas automatizadas: `npm test`. Build: `npm run build`. Las pruebas con mocks
+no demuestran que el procedimiento esté instalado ni que haya una escritura real.

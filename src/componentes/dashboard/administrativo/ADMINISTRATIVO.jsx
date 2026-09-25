@@ -9,12 +9,13 @@ import {
   loginAdministrator,
   removeCandidate,
 } from "./adminApi";
-import { buildExternalPerson } from "./personaImportMapper";
+import { buildOraclePerson } from "./personaImportMapper";
 import { logImportDiagnostic, preparationDiagnostic } from "./personImportDiagnostics.js";
 import "./ADMINISTRATIVO.css";
 
 const EMPTY_PAPERWORK = { status: "idle", error: "", url: "", type: "", filename: "" };
-const ACCEPTED_CANDIDATES_KEY = "coopyaOracleVerifiedCandidates";
+// Session-only: the Linux database can be restored nightly. Old Coopya flags do not apply.
+const ACCEPTED_CANDIDATES_KEY = "ordsLinuxVerifiedCandidates";
 
 const formatCurrency = (amount) => new Intl.NumberFormat("es-AR", {
   style: "currency",
@@ -34,7 +35,7 @@ const genderLabels = { male: "Hombre", female: "Mujer" };
 
 const getStoredAcceptedCandidateIds = () => {
   try {
-    const storedIds = JSON.parse(localStorage.getItem(ACCEPTED_CANDIDATES_KEY) || "[]");
+    const storedIds = JSON.parse(sessionStorage.getItem(ACCEPTED_CANDIDATES_KEY) || "[]");
     return Array.isArray(storedIds) ? storedIds : [];
   } catch {
     return [];
@@ -198,7 +199,7 @@ export default function Administrativo() {
   const markCandidateAsAccepted = (candidateId) => {
     setAcceptedCandidateIds((current) => {
       const next = current.includes(candidateId) ? current : [...current, candidateId];
-      try { localStorage.setItem(ACCEPTED_CANDIDATES_KEY, JSON.stringify(next)); } catch {
+      try { sessionStorage.setItem(ACCEPTED_CANDIDATES_KEY, JSON.stringify(next)); } catch {
         console.warn("La aceptación fue confirmada, pero el navegador no pudo guardar el indicador local.");
       }
       return next;
@@ -208,7 +209,7 @@ export default function Administrativo() {
   const handleAccept = async (candidate) => {
     if (acceptanceInFlight.current || acceptedCandidateIds.includes(candidate.id)) return;
 
-    const confirmed = window.confirm(`¿Aceptar a ${candidate.nombreCompleto} e importar sus datos en Coopya y Oracle?`);
+    const confirmed = window.confirm(`¿Aceptar a ${candidate.nombreCompleto} y enviar sus datos a PERSONA en Oracle Linux mediante ORDS? No se enviará a Coopya ni se creará un contrato de préstamo. Si ya lo intentaste, verificá antes que no exista en Oracle.`);
     if (!confirmed) return;
 
     acceptanceInFlight.current = true;
@@ -221,12 +222,12 @@ export default function Administrativo() {
     try {
       const fullCandidate = await getCandidate(candidate.id);
       stage = "preparar_datos";
-      const persona = buildExternalPerson(fullCandidate);
+      const persona = buildOraclePerson(fullCandidate);
       const result = await importAcceptedPerson(persona, { requestId });
       markCandidateAsAccepted(candidate.id);
       setAcceptanceMessage({
         id: candidate.id,
-        message: `Persona verificada en Oracle: ID ${result.oracle.idPersona} · ${result.oracle.operacion.toLowerCase()}.`,
+        message: `ORDS confirmó la persona en Oracle: ID ${result.oracle.idPersona} · ${result.oracle.operacion.toLowerCase()}.`,
       });
     } catch (error) {
       const diagnostic = error.diagnostic || preparationDiagnostic(error, stage, requestId);
@@ -299,6 +300,13 @@ export default function Administrativo() {
           </div>
         </header>
 
+        <p className="admin-import-notice">
+          Aceptación vía ORDS · Oracle Linux. Solo crea o actualiza la persona, no el préstamo.
+          {import.meta.env.DEV && " Modo local: la conexión sale de esta computadora; requiere red de oficina o VPN."}
+          {!import.meta.env.DEV && " La conexión sale del servidor: estar en la oficina no da acceso de red a Vercel."}
+          {" Los indicadores son de esta sesión y no comprueban que el registro siga existiendo después de una restauración."}
+        </p>
+
         <div className="admin-toolbar">
           <input
             type="search"
@@ -358,7 +366,7 @@ export default function Administrativo() {
                           Ver detalle
                         </button>
                         {wasAccepted ? (
-                          <span className="admin-accepted-status">Persona aceptada</span>
+                          <span className="admin-accepted-status">Confirmada en esta sesión</span>
                         ) : (
                           <button
                             type="button"
@@ -366,7 +374,7 @@ export default function Administrativo() {
                             onClick={() => handleAccept(candidate)}
                             disabled={Boolean(acceptingId)}
                           >
-                            {acceptingId === candidate.id ? "Aceptando..." : "Aceptar persona"}
+                            {acceptingId === candidate.id ? "Enviando a ORDS..." : "Aceptar persona"}
                           </button>
                         )}
                         <button
