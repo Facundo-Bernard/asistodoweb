@@ -3,7 +3,7 @@ import { ImportError } from "./_diagnostics.js";
 import { isOracleConfirmed } from "../../shared/personImportContract.js";
 import { validateOraclePerson } from "./_personValidation.js";
 
-function isPrivateHost(hostname) {
+export function isPrivateHost(hostname) {
   const host = hostname.toLowerCase();
   if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local") || host === "[::1]"
       || /^\[f[cd]/.test(host) || /^\[fe[89ab]/.test(host)) return true;

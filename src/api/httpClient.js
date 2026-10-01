@@ -1,7 +1,10 @@
 import axios from "axios";
 
 const TOKEN_KEY = "coopyaAccessToken";
-const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+// Local development uses Vite's same-origin proxy; production calls the web API.
+const apiBaseUrl = import.meta.env.DEV
+  ? ""
+  : (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
 export const API_URIS = Object.freeze({
   auth: {

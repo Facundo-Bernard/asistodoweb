@@ -5,6 +5,7 @@ import {
   getCandidatePaperwork,
   getCandidates,
   getCurrentUser,
+  getPersonImportStatus,
   importAcceptedPerson,
   loginAdministrator,
   removeCandidate,
@@ -14,8 +15,9 @@ import { logImportDiagnostic, preparationDiagnostic } from "./personImportDiagno
 import "./ADMINISTRATIVO.css";
 
 const EMPTY_PAPERWORK = { status: "idle", error: "", url: "", type: "", filename: "" };
-// Session-only: the Linux database can be restored nightly. Old Coopya flags do not apply.
-const ACCEPTED_CANDIDATES_KEY = "ordsLinuxVerifiedCandidates";
+// Session-only indicators are separate for Linux and production Oracle.
+const isProductionOracle = import.meta.env.VITE_IMPORT_TARGET === "oracle_prod";
+const ACCEPTED_CANDIDATES_KEY = isProductionOracle ? "prodOracleVerifiedCandidates" : "ordsLinuxVerifiedCandidates";
 
 const formatCurrency = (amount) => new Intl.NumberFormat("es-AR", {
   style: "currency",
@@ -60,12 +62,24 @@ export default function Administrativo() {
   const [acceptedCandidateIds, setAcceptedCandidateIds] = useState(getStoredAcceptedCandidateIds);
   const [acceptanceError, setAcceptanceError] = useState({ id: "", message: "" });
   const [acceptanceMessage, setAcceptanceMessage] = useState({ id: "", message: "" });
+  const [importStatus, setImportStatus] = useState({ ready: !isProductionOracle, message: "" });
   const detailRequestId = useRef(0);
   const acceptanceInFlight = useRef(false);
 
   useEffect(() => () => {
     if (paperwork.url) URL.revokeObjectURL(paperwork.url);
   }, [paperwork.url]);
+
+  useEffect(() => {
+    if (!isProductionOracle) return;
+    let active = true;
+    getPersonImportStatus().then((status) => {
+      if (active) setImportStatus({ ready: status.ready === true, message: status.configurationMessage || "" });
+    }).catch(() => {
+      if (active) setImportStatus({ ready: false, message: "No se pudo comprobar la configuración de Oracle." });
+    });
+    return () => { active = false; };
+  }, []);
 
   const loadCandidates = async () => {
     setLoadingCandidates(true);
@@ -207,9 +221,10 @@ export default function Administrativo() {
   };
 
   const handleAccept = async (candidate) => {
-    if (acceptanceInFlight.current || acceptedCandidateIds.includes(candidate.id)) return;
+    if (acceptanceInFlight.current || acceptedCandidateIds.includes(candidate.id) || !importStatus.ready) return;
 
-    const confirmed = window.confirm(`¿Aceptar a ${candidate.nombreCompleto} y enviar sus datos a PERSONA en Oracle Linux mediante ORDS? No se enviará a Coopya ni se creará un contrato de préstamo. Si ya lo intentaste, verificá antes que no exista en Oracle.`);
+    const destination = isProductionOracle ? "Oracle de producción" : "Oracle Linux mediante ORDS";
+    const confirmed = window.confirm(`¿Aceptar a ${candidate.nombreCompleto} y enviar sus datos a PERSONA en ${destination}? Se creará la persona, no un contrato de préstamo. Si ya lo intentaste, verificá antes que no exista en Oracle.`);
     if (!confirmed) return;
 
     acceptanceInFlight.current = true;
@@ -227,7 +242,7 @@ export default function Administrativo() {
       markCandidateAsAccepted(candidate.id);
       setAcceptanceMessage({
         id: candidate.id,
-        message: `ORDS confirmó la persona en Oracle: ID ${result.oracle.idPersona} · ${result.oracle.operacion.toLowerCase()}.`,
+        message: `Oracle confirmó la persona: ID ${result.oracle.idPersona} · ${result.oracle.operacion.toLowerCase()}.`,
       });
     } catch (error) {
       const diagnostic = error.diagnostic || preparationDiagnostic(error, stage, requestId);
@@ -301,11 +316,15 @@ export default function Administrativo() {
         </header>
 
         <p className="admin-import-notice">
-          Aceptación vía ORDS · Oracle Linux. Solo crea o actualiza la persona, no el préstamo.
-          {import.meta.env.DEV && " Modo local: la conexión sale de esta computadora; requiere red de oficina o VPN."}
-          {!import.meta.env.DEV && " La conexión sale del servidor: estar en la oficina no da acceso de red a Vercel."}
-          {" Los indicadores son de esta sesión y no comprueban que el registro siga existiendo después de una restauración."}
+          {isProductionOracle
+            ? "Aceptación · Oracle de producción. Crea la persona y la consulta nuevamente después de guardar."
+            : "Aceptación vía ORDS · Oracle Linux. Solo crea o actualiza la persona, no el préstamo."}
+          {import.meta.env.DEV && " La conexión sale de esta computadora; requiere red de oficina o VPN."}
+          {!import.meta.env.DEV && isProductionOracle && " Vercel utiliza el puente HTTPS publicado desde la oficina; tu Wi-Fi no cambia la conexión del servidor."}
+          {!import.meta.env.DEV && !isProductionOracle && " La conexión sale del servidor: estar en la oficina no da acceso de red a Vercel."}
+          {!isProductionOracle && " Los indicadores son de esta sesión y no comprueban que el registro siga existiendo después de una restauración."}
         </p>
+        {isProductionOracle && !importStatus.ready && <p className="admin-error" role="status">{importStatus.message || "La conexión de escritura aún no está lista."}</p>}
 
         <div className="admin-toolbar">
           <input
@@ -372,9 +391,9 @@ export default function Administrativo() {
                             type="button"
                             className="admin-accept-button"
                             onClick={() => handleAccept(candidate)}
-                            disabled={Boolean(acceptingId)}
+                            disabled={Boolean(acceptingId) || !importStatus.ready}
                           >
-                            {acceptingId === candidate.id ? "Enviando a ORDS..." : "Aceptar persona"}
+                            {acceptingId === candidate.id ? "Guardando en Oracle..." : "Aceptar persona"}
                           </button>
                         )}
                         <button

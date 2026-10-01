@@ -19,6 +19,10 @@ export function createRedactor(env, authorization) {
     const config = JSON.parse(env.COOPYA_ORACLE_CONFIG || "{}");
     if (typeof config?.password === "string") secrets.add(config.password);
   } catch { /* Configuration validation reports invalid JSON without echoing it. */ }
+  try {
+    const config = JSON.parse(env.COOPYA_ORACLE_PROD_CONFIG || "{}");
+    if (typeof config?.password === "string") secrets.add(config.password);
+  } catch { /* Configuration validation reports invalid JSON without echoing it. */ }
   return {
     addPerson(persona) {
       for (const value of Object.values(persona || {})) {
@@ -60,7 +64,9 @@ export function errorHint(error, codes, stage) {
   if (error.hint) return error.hint;
   const all = codes.join(" ");
   if (/ORA-20001/.test(all)) return "El procedimiento rechazó el token. Revisá la credencial PERSONAS_IMPORT y ACTIVO en la misma base.";
-  if (/ORA-01017/.test(all)) return "Oracle rechazó el usuario o la contraseña de COOPYA_ORACLE_CONFIG.";
+  if (/ORA-01017/.test(all)) return "Oracle rechazó el usuario o la contraseña configurados para la conexión.";
+  if (/ORA-01031|ORA-02289/.test(all)) return "La cuenta de escritura necesita INSERT en PRESTAPROD.PERSONA y acceso a la secuencia PRESTAPROD.IDPERSONA.";
+  if (/ORA-00942/.test(all) && stage !== "coopya") return "La cuenta no puede acceder a PRESTAPROD.PERSONA o a una tabla requerida.";
   if (/ORA-28000/.test(all)) return "La cuenta Oracle está bloqueada; debe desbloquearla el administrador de la base.";
   if (/ORA-12514|ORA-12505|NJS-518/.test(all)) return "El listener no reconoce el servicio o SID. Copiá la configuración real de Toad.";
   if (/ENOTFOUND|EAI_AGAIN|ORA-12154/.test(all)) return "El servidor no pudo resolver el host o alias de Oracle. Un alias local de Toad no alcanza en Vercel.";
@@ -69,7 +75,7 @@ export function errorHint(error, codes, stage) {
   if (/ORA-02291/.test(all)) return "Un ID interno no existe en su tabla de referencia. Verificá tipo, estado, prestador, provincia y sexo.";
   if (/ORA-12899|ORA-01400/.test(all)) return "Un campo supera el tamaño permitido o falta un valor requerido. El detalle indica la columna.";
   if (/ORA-00001/.test(all)) return "Hay una clave duplicada. Verificá DNI y la secuencia IDPERSONA antes de reintentar.";
-  if (/TIMEOUT|ETIMEDOUT|ECONNREFUSED|NJS-5\d\d|ORA-12170|ORA-12541/.test(all)) return "Revisá host, puerto, listener y acceso de red desde Vercel. Si se cortó durante la escritura, comprobá la tabla antes de reintentar.";
+  if (/TIMEOUT|ETIMEDOUT|ECONNREFUSED|NJS-5\d\d|ORA-12170|ORA-12541/.test(all)) return "Revisá host, puerto, listener y acceso de red desde el servidor que realiza la escritura. Comprobá la tabla antes de reintentar.";
   if (stage === "coopya") return "Revisá el detalle del rechazo de Coopya: token, campos y plan seleccionado. Oracle todavía no fue ejecutado.";
   return "Buscá el identificador del intento en la terminal local o en los logs de Vercel para revisar la etapa indicada.";
 }

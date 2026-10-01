@@ -33,6 +33,11 @@ export async function importAcceptedPerson(persona, options) {
   return sendPersonImport(appHttpClient, APP_URIS.people.import, persona, options);
 }
 
+export async function getPersonImportStatus() {
+  const { data } = await appHttpClient.get(APP_URIS.people.import);
+  return data;
+}
+
 export async function removeCandidate(id) {
   await httpClient.delete(API_URIS.candidates.byId(id));
 }

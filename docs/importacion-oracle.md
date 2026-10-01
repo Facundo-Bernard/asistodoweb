@@ -1,5 +1,9 @@
 # Aceptación de solicitudes mediante ORDS (Linux)
 
+Esta es la integración ORDS previa. Para insertar directamente en Oracle 11g
+de producción desde el panel local, usar
+[`importacion-oracle-produccion-local.md`](importacion-oracle-produccion-local.md).
+
 El panel llama con Axios a `POST /api/personas/importar` en su mismo origen.
 El backend valida la sesión de administrador con la API de solicitudes y manda
 una única petición a ORDS. No llama a la API de importación de Coopya, no abre una
@@ -18,10 +22,11 @@ confirmar cómo afecta la restauración nocturna del Linux.
 1. Instalar dependencias con `npm ci` si es un checkout nuevo.
 2. Copiar `.env.example` a `.env` y completar `COOPYA_IMPORT_TOKEN` con el token
    configurado en Oracle. Conservar el `.env` existente si ya tiene el token.
-3. Crear `.env.development.local` (ignorado por Git) con:
+3. Completar el mismo `.env` (ignorado por Git) con:
 
    ```dotenv
    COOPYA_ORDS_URL=http://172.17.1.4:8080/ords/prestaprod/asistodo/personas
+   VITE_API_BASE_URL=https://ticketera-backend-production-a834.up.railway.app
    ```
 
 4. Ejecutar `npm run dev` y abrir la dirección local indicada, ruta
@@ -31,6 +36,11 @@ Vite ejecuta el mismo backend de aceptación mediante middleware Node. La petici
 a ORDS sale de esta computadora. El navegador nunca conecta directamente al puerto
 8080; no es necesario habilitar CORS en ORDS para este flujo. Reiniciar el servidor
 local si se cambian variables. `npm run preview` no ejecuta el backend.
+
+En desarrollo, Axios llama a `/api/v1/...` en el origen local y Vite deriva esas
+peticiones a `VITE_API_BASE_URL`, conservando la autenticación. Esto evita el
+rechazo CORS del origen local en Railway. `/api/personas/importar` no se deriva:
+sigue ejecutándose en esta computadora. En producción Axios conserva la URL web.
 
 `GET /api/personas/importar` devuelve versión y `transport: "ords"` sin hacer
 escrituras ni mostrar credenciales. No comprueba la conectividad de Oracle.
