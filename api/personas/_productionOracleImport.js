@@ -128,17 +128,57 @@ const readbackSql = `SELECT IDPERSONA AS "idPersona", NOMBRE AS "nombre", APELLI
   FROM PRESTAPROD.PERSONA
   WHERE IDPERSONA = :idPersona AND IDDOCUMENTO_TIPO = :tipoDoc AND DOCUMENTO_NRO = :numeroDoc`;
 
+// The read-only DNI lookup comes from the working API in api-oracle-coopya.zip.
+// It runs here with the configured local writer account so one Oracle client is enough.
+const personByDocumentSql = `SELECT p.IDPERSONA AS "idPersona",
+  p.DOCUMENTO_NRO AS "numeroDoc", p.CUIL AS "cuil",
+  p.APELLIDO AS "apellido", p.NOMBRE AS "nombre",
+  p.CALLE AS "calle", p.CALLE_NRO AS "numeroCalle",
+  p.IDCODIGOPOSTAL AS "codigoPostal"
+  FROM PRESTAPROD.PERSONA p
+  WHERE p.IDDOCUMENTO_TIPO = 1 AND p.DOCUMENTO_NRO = :dni AND ROWNUM <= 2`;
+
+async function productionDriver(configuration, suppliedDriver) {
+  if (!suppliedDriver && !existsSync(path.join(configuration.clientDir, "oci.dll"))) {
+    throw new ImportError("PRODUCTION_ORACLE_CLIENT_MISSING", "Falta Oracle Instant Client del ZIP en .oracle-client/instantclient_19_24.", { status: 503 });
+  }
+  const oracledb = suppliedDriver || (await import("oracledb")).default;
+  if (oracledb.thin) oracledb.initOracleClient({ libDir: configuration.clientDir });
+  if (oracledb.thin) throw new ImportError("PRODUCTION_ORACLE_THIN_MODE", "Oracle 11g requiere el cliente Oracle del ZIP en modo Thick.", { status: 503 });
+  return oracledb;
+}
+
+export async function findPersonInProductionByDni(dni, { env = process.env,
+  configuration = readProductionOracleConfiguration(env), driver, onStage = () => {} } = {}) {
+  const document = String(dni ?? "").trim();
+  if (!/^\d{7,9}$/.test(document)) {
+    throw new ImportError("PERSON_DNI_INVALID", "Ingresá un DNI de 7 a 9 dígitos.", { status: 422 });
+  }
+  onStage("driver_oracle");
+  const oracledb = await productionDriver(configuration, driver);
+  let connection;
+  try {
+    onStage("conexion_oracle");
+    connection = await oracledb.getConnection({ user: configuration.user, password: configuration.password,
+      connectString: configuration.connectString, connectTimeout: 15 });
+    connection.callTimeout = 20000;
+    onStage("consulta_persona");
+    const result = await connection.execute(personByDocumentSql, { dni: document }, { outFormat: oracledb.OUT_FORMAT_OBJECT });
+    if (result.rows?.length > 1) {
+      throw new ImportError("PRODUCTION_PERSON_AMBIGUOUS", "Hay más de una persona con ese DNI; revisá la base antes de continuar.", { status: 409 });
+    }
+    return result.rows?.[0] || null;
+  } finally {
+    if (connection) await connection.close();
+  }
+}
+
 export async function importPersonIntoProduction(persona, { env = process.env,
   configuration = readProductionOracleConfiguration(env), driver,
   onStage = () => {}, onDatabase = () => {}, onWarning = () => {} } = {}) {
   const person = prepareOrdsPerson(persona);
-  if (!driver && !existsSync(path.join(configuration.clientDir, "oci.dll"))) {
-    throw new ImportError("PRODUCTION_ORACLE_CLIENT_MISSING", "Falta Oracle Instant Client del ZIP en .oracle-client/instantclient_19_24.", { status: 503 });
-  }
   onStage("driver_oracle");
-  const oracledb = driver || (await import("oracledb")).default;
-  if (oracledb.thin) oracledb.initOracleClient({ libDir: configuration.clientDir });
-  if (oracledb.thin) throw new ImportError("PRODUCTION_ORACLE_THIN_MODE", "Oracle 11g requiere el cliente Oracle del ZIP en modo Thick.", { status: 503 });
+  const oracledb = await productionDriver(configuration, driver);
 
   let connection;
   let verificationConnection;

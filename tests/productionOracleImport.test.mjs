@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readProductionOracleConfiguration, importPersonIntoProduction,
+import { readProductionOracleConfiguration, importPersonIntoProduction, findPersonInProductionByDni,
   readProductionBridgeConfiguration, importPersonViaProductionBridge } from "../api/personas/_productionOracleImport.js";
 import { createImportHandler } from "../api/personas/importar.js";
 import { createBridgeHandler } from "../scripts/oracleBridge.js";
+import { createLocalPersonLookupHandler } from "../scripts/localPersonLookup.js";
 
 const env = { COOPYA_IMPORT_TARGET: "oracle_prod",
   COOPYA_ORACLE_PROD_CONFIG: JSON.stringify({ user: "PRESTAPROD", password: "test-only-secret", connectString: "172.17.1.3:1521/orcl" }),
@@ -87,6 +88,46 @@ test("a missing readback cannot mark the application accepted", async () => {
     { code: "PRODUCTION_ORACLE_READBACK_FAILED" });
   assert.deepEqual(events.slice(0, 4), ["duplicate-check", "insert", "commit", "readback"]);
   assert.equal(events.includes("rollback"), false);
+});
+
+test("the ZIP-based DNI lookup only reads PERSONA with binds and closes the Oracle connection", async () => {
+  const calls = [];
+  const driver = { thin: false, OUT_FORMAT_OBJECT: 4002, async getConnection() {
+    calls.push("connect");
+    return { async execute(sql, binds) {
+      assert.match(sql, /FROM PRESTAPROD\.PERSONA p/);
+      assert.match(sql, /p\.DOCUMENTO_NRO = :dni/);
+      assert.equal(binds.dni, "12345678");
+      calls.push("select");
+      return { rows: [{ idPersona: 99, numeroDoc: 12345678, apellido: "PEREZ", nombre: "MARIA" }] };
+    }, async close() { calls.push("close"); } };
+  } };
+  const result = await findPersonInProductionByDni("12345678", { configuration: config, driver });
+  assert.equal(result.idPersona, 99);
+  assert.deepEqual(calls, ["connect", "select", "close"]);
+  await assert.rejects(findPersonInProductionByDni("abc", { configuration: config, driver }), { code: "PERSON_DNI_INVALID" });
+  assert.deepEqual(calls, ["connect", "select", "close"]);
+});
+
+test("the local DNI endpoint verifies administrator before any Oracle lookup", async () => {
+  let lookups = 0;
+  const handle = createLocalPersonLookupHandler({ env, logger: { info() {}, error() {} },
+    fetchImpl: async () => Response.json({ rol: "admin" }),
+    findPerson: async (dni) => {
+      lookups += 1;
+      assert.equal(dni, "12345678");
+      return { idPersona: 99, apellido: "PEREZ", nombre: "MARIA" };
+    } });
+  const url = "http://localhost/api/personas/consultar?dni=12345678";
+  assert.equal((await handle(new Request(url))).status, 401);
+  assert.equal(lookups, 0);
+  const response = await handle(new Request(url, { headers: { authorization: "Bearer fixture-session" } }));
+  assert.equal(response.status, 200);
+  const body = await response.json();
+  assert.equal(body.found, true);
+  assert.equal(body.persona.idPersona, 99);
+  assert.equal(lookups, 1);
+  assert.equal((await handle(new Request(url, { method: "POST" }))).status, 405);
 });
 
 test("local acceptance selects production only after admin authentication", async () => {

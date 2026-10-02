@@ -38,6 +38,21 @@ error visible y no modifica el registro. No se crea un préstamo ni un contrato.
 4. Ejecutar `npm run dev` y abrir `/admin/solicitudes` en la URL local.
    Reiniciar el servidor tras cambiar el `.env`.
 
+En la rama local `codex/admin-oracle-local`, cada solicitud tiene el botón
+**Consultar DNI en Oracle**. La consulta utiliza directamente el SQL de
+`GET /personas/{dni}` del ZIP `api-oracle-coopya.zip`, adaptado a Node y protegido
+por la misma sesión administradora del panel. Solo lee `PRESTAPROD.PERSONA`:
+devuelve ID, nombre, apellido, CUIL y domicilio; nunca hace cambios. Si ya existe
+una persona con ese DNI, el panel avisa y deshabilita la aceptación de esa fila.
+Aunque no se consulte antes, la escritura vuelve a verificar duplicados dentro
+de Oracle antes de insertar.
+
+El ZIP trae credenciales de una cuenta de **solo lectura** y no contiene un
+endpoint de alta probado. La rama reutiliza su conexión con Instant Client en
+modo Thick y su consulta por DNI, pero conserva la inserción propia del proyecto
+con PRESTAPROD. No se copiaron al repositorio ni al navegador las credenciales
+incluidas en el ZIP.
+
 La conexión directa no se ejecuta en Vercel: `172.17.1.3` es una IP privada. La
 integración ORDS de Linux permanece como opción separada cuando
 `COOPYA_IMPORT_TARGET` no vale `oracle_prod`.

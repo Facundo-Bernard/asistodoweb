@@ -6,6 +6,7 @@ import {
   getCandidates,
   getCurrentUser,
   getPersonImportStatus,
+  getProductionPersonByDni,
   importAcceptedPerson,
   loginAdministrator,
   removeCandidate,
@@ -17,6 +18,7 @@ import "./ADMINISTRATIVO.css";
 const EMPTY_PAPERWORK = { status: "idle", error: "", url: "", type: "", filename: "" };
 // Session-only indicators are separate for Linux and production Oracle.
 const isProductionOracle = import.meta.env.VITE_IMPORT_TARGET === "oracle_prod";
+const canQueryLocalOracle = import.meta.env.DEV && isProductionOracle;
 const ACCEPTED_CANDIDATES_KEY = isProductionOracle ? "prodOracleVerifiedCandidates" : "ordsLinuxVerifiedCandidates";
 
 const formatCurrency = (amount) => new Intl.NumberFormat("es-AR", {
@@ -63,6 +65,8 @@ export default function Administrativo() {
   const [acceptanceError, setAcceptanceError] = useState({ id: "", message: "" });
   const [acceptanceMessage, setAcceptanceMessage] = useState({ id: "", message: "" });
   const [importStatus, setImportStatus] = useState({ ready: !isProductionOracle, message: "" });
+  const [oracleLookup, setOracleLookup] = useState({});
+  const [lookingUpId, setLookingUpId] = useState("");
   const detailRequestId = useRef(0);
   const acceptanceInFlight = useRef(false);
 
@@ -220,6 +224,24 @@ export default function Administrativo() {
     });
   };
 
+  const handleOracleLookup = async (candidate) => {
+    if (lookingUpId || !importStatus.ready) return;
+    setLookingUpId(candidate.id);
+    setOracleLookup((current) => ({ ...current, [candidate.id]: { status: "loading" } }));
+    try {
+      const result = await getProductionPersonByDni(candidate.dni);
+      setOracleLookup((current) => ({ ...current, [candidate.id]: {
+        status: result.found ? "found" : "missing", persona: result.persona,
+      } }));
+    } catch (error) {
+      setOracleLookup((current) => ({ ...current, [candidate.id]: {
+        status: "error", message: getErrorMessage(error, "No se pudo consultar PERSONA en Oracle."),
+      } }));
+    } finally {
+      setLookingUpId("");
+    }
+  };
+
   const handleAccept = async (candidate) => {
     if (acceptanceInFlight.current || acceptedCandidateIds.includes(candidate.id) || !importStatus.ready) return;
 
@@ -359,6 +381,7 @@ export default function Administrativo() {
               ) : filteredCandidates.map((candidate) => {
                 const product = candidate.productoSeleccionado || {};
                 const wasAccepted = acceptedCandidateIds.includes(candidate.id);
+                const oraclePerson = oracleLookup[candidate.id];
                 return (
                   <tr key={candidate.id}>
                     <td>
@@ -384,6 +407,15 @@ export default function Administrativo() {
                         <button type="button" className="admin-detail-button" onClick={() => handleViewDetail(candidate)}>
                           Ver detalle
                         </button>
+                        {canQueryLocalOracle && <button type="button" className="admin-detail-button"
+                          onClick={() => handleOracleLookup(candidate)} disabled={Boolean(lookingUpId) || !importStatus.ready}>
+                          {lookingUpId === candidate.id ? "Consultando Oracle..." : "Consultar DNI en Oracle"}
+                        </button>}
+                        {oraclePerson?.status === "found" && <span className="admin-accepted-status">
+                          Ya existe en Oracle: ID {oraclePerson.persona.idPersona} · {oraclePerson.persona.apellido} {oraclePerson.persona.nombre}
+                        </span>}
+                        {oraclePerson?.status === "missing" && <span className="admin-action-success">DNI no encontrado en Oracle.</span>}
+                        {oraclePerson?.status === "error" && <span className="admin-action-error" role="alert">{oraclePerson.message}</span>}
                         {wasAccepted ? (
                           <span className="admin-accepted-status">Confirmada en esta sesión</span>
                         ) : (
@@ -391,7 +423,7 @@ export default function Administrativo() {
                             type="button"
                             className="admin-accept-button"
                             onClick={() => handleAccept(candidate)}
-                            disabled={Boolean(acceptingId) || !importStatus.ready}
+                            disabled={Boolean(acceptingId) || !importStatus.ready || oraclePerson?.status === "found"}
                           >
                             {acceptingId === candidate.id ? "Guardando en Oracle..." : "Aceptar persona"}
                           </button>

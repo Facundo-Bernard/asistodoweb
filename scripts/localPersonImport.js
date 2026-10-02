@@ -1,14 +1,17 @@
 /* global Buffer */
 import { createImportHandler } from "../api/personas/importar.js";
+import { createLocalPersonLookupHandler } from "./localPersonLookup.js";
 
 // Vite dev only. The same authenticated backend runs on this computer, not in React.
 export function localPersonImportPlugin(env) {
   const handle = createImportHandler({ env });
+  const lookup = createLocalPersonLookupHandler({ env });
   return {
     name: "local-person-import", apply: "serve",
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
-        if (req.url?.split("?")[0] !== "/api/personas/importar") return next();
+        const pathname = req.url?.split("?")[0];
+        if (!["/api/personas/importar", "/api/personas/consultar"].includes(pathname)) return next();
         const reply = (status, message) => {
           res.writeHead(status, { "Content-Type": "application/json", "Cache-Control": "no-store" });
           res.end(JSON.stringify({ ok: false, detail: message }));
@@ -21,11 +24,11 @@ export function localPersonImportPlugin(env) {
             if (bytes > 128 * 1024) return reply(413, "La solicitud supera el tamaño permitido.");
             chunks.push(chunk);
           }
-          const request = new Request("http://localhost/api/personas/importar", {
+          const request = new Request(new URL(req.url || "/", "http://localhost"), {
             method: req.method, headers: req.headers,
             ...(!["GET", "HEAD"].includes(req.method) ? { body: Buffer.concat(chunks) } : {}),
           });
-          const response = await handle(request);
+          const response = await (pathname === "/api/personas/consultar" ? lookup(request) : handle(request));
           res.writeHead(response.status, Object.fromEntries(response.headers));
           res.end(await response.text());
         } catch {

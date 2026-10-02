@@ -38,6 +38,11 @@ export async function getPersonImportStatus() {
   return data;
 }
 
+export async function getProductionPersonByDni(dni) {
+  const { data } = await appHttpClient.get("/api/personas/consultar", { params: { dni } });
+  return data;
+}
+
 export async function removeCandidate(id) {
   await httpClient.delete(API_URIS.candidates.byId(id));
 }
