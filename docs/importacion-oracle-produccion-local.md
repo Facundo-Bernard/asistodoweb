@@ -104,6 +104,10 @@ no alcanza para que Vercel escriba en Oracle.
   `PRESTADOR=75`.
 - Se verificó conexión Node en modo Thick con el cliente extraído del ZIP,
   incluyendo acceso con PRESTAPROD y consulta a PERSONA y la secuencia.
+- El 2026-10-02 se autenticó PRESTAPROD en `orcl` y Oracle aceptó un `INSERT`
+  contra `PRESTAPROD.PERSONA` que afectó cero filas. Se hizo `ROLLBACK` sin
+  consumir la secuencia: esto verifica acceso de escritura sin dar de alta a
+  nadie, pero no sustituye la prueba de un alta real con datos válidos.
 - La ruta de escritura y consulta posterior se probó con conexiones simuladas.
   Todavía no se insertó una persona real ni se verificó un acceso HTTPS público.
 
