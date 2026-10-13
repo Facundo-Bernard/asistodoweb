@@ -1,0 +1,25 @@
+:8083 {
+    root * /usr/share/caddy
+    encode gzip zstd
+
+    # Headers de seguridad recomendados
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Proxy inverso para las peticiones a la API del backend
+    # Permite que todas las PCs de la oficina se comuniquen con la API sin errores de CORS
+    handle /api/v1/* {
+        reverse_proxy {$BACKEND_URL:https://ticketera-backend-production-a834.up.railway.app} {
+            header_up Host {upstream_hostport}
+        }
+    }
+
+    # Fallback para Single Page Application (React Router)
+    handle {
+        try_files {path} /index.html
+        file_server
+    }
+}
