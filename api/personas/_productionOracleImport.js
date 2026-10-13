@@ -8,6 +8,19 @@ import { isOracleConfirmed } from "../../shared/personImportContract.js";
 const PRODUCTION_DSN = "172.17.1.3:1521/orcl";
 const PRODUCTION_CLIENT = path.resolve(".oracle-client", "instantclient_19_24");
 
+export function resolveProductionClient(env = process.env, platform = process.platform) {
+  if (platform === "win32") return { clientDir: PRODUCTION_CLIENT, clientLibrary: "oci.dll" };
+  if (platform === "linux") {
+    const clientDir = env.COOPYA_ORACLE_CLIENT_DIR?.trim();
+    if (!clientDir || !path.posix.isAbsolute(clientDir)) {
+      throw new ImportError("PRODUCTION_ORACLE_CLIENT_DIR_MISSING",
+        "En Linux, COOPYA_ORACLE_CLIENT_DIR debe indicar la ruta absoluta de Oracle Instant Client.", { status: 503 });
+    }
+    return { clientDir, clientLibrary: "libclntsh.so" };
+  }
+  throw new ImportError("PRODUCTION_ORACLE_PLATFORM_UNSUPPORTED", "La importación directa solo está preparada para Windows o Linux.", { status: 503 });
+}
+
 // These IDs were checked against the production catalogues on 2026-10-01.
 const PERSON_TYPE_ID = 3;
 const PERSON_STATUS_ID = 1;
@@ -34,14 +47,14 @@ export function readProductionOracleConfiguration(env = process.env) {
     throw new ImportError("PRODUCTION_ORACLE_TARGET_INVALID", "La conexión de escritura debe apuntar a 172.17.1.3:1521/orcl, la base de producción comprobada.", { status: 503 });
   }
   return { user: config.user.trim(), password: config.password, connectString: PRODUCTION_DSN,
-    clientDir: PRODUCTION_CLIENT, execution: "local" };
+    ...resolveProductionClient(env), execution: "local" };
 }
 
 export function productionOracleReadiness(env = process.env) {
   try {
     const config = readProductionOracleConfiguration(env);
-    if (!existsSync(path.join(config.clientDir, "oci.dll"))) {
-      return { ready: false, message: "Falta preparar Oracle Instant Client desde el ZIP." };
+    if (!existsSync(path.join(config.clientDir, config.clientLibrary))) {
+      return { ready: false, message: "Falta Oracle Instant Client en la ruta configurada para este equipo." };
     }
     return { ready: true, message: "Configuración local de Oracle lista para probar." };
   } catch (error) {
@@ -139,11 +152,14 @@ const personByDocumentSql = `SELECT p.IDPERSONA AS "idPersona",
   WHERE p.IDDOCUMENTO_TIPO = 1 AND p.DOCUMENTO_NRO = :dni AND ROWNUM <= 2`;
 
 async function productionDriver(configuration, suppliedDriver) {
-  if (!suppliedDriver && !existsSync(path.join(configuration.clientDir, "oci.dll"))) {
-    throw new ImportError("PRODUCTION_ORACLE_CLIENT_MISSING", "Falta Oracle Instant Client del ZIP en .oracle-client/instantclient_19_24.", { status: 503 });
+  if (!suppliedDriver && !existsSync(path.join(configuration.clientDir, configuration.clientLibrary))) {
+    throw new ImportError("PRODUCTION_ORACLE_CLIENT_MISSING", "Falta Oracle Instant Client en la ruta configurada para este equipo.", { status: 503 });
   }
   const oracledb = suppliedDriver || (await import("oracledb")).default;
-  if (oracledb.thin) oracledb.initOracleClient({ libDir: configuration.clientDir });
+  if (oracledb.thin) {
+    if (configuration.clientLibrary === "oci.dll") oracledb.initOracleClient({ libDir: configuration.clientDir });
+    else oracledb.initOracleClient();
+  }
   if (oracledb.thin) throw new ImportError("PRODUCTION_ORACLE_THIN_MODE", "Oracle 11g requiere el cliente Oracle del ZIP en modo Thick.", { status: 503 });
   return oracledb;
 }

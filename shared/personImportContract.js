@@ -1,5 +1,5 @@
 export const IMPORT_SERVICE = "asistodo-personas";
-export const IMPORT_VERSION = "2026-10-01.prod.1";
+export const IMPORT_VERSION = "2026-10-13.office.1";
 
 export function isOracleConfirmed(oracle) {
   return oracle?.confirmed === true

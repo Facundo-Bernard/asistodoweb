@@ -1,10 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { once } from "node:events";
 import { readProductionOracleConfiguration, importPersonIntoProduction, findPersonInProductionByDni,
-  readProductionBridgeConfiguration, importPersonViaProductionBridge } from "../api/personas/_productionOracleImport.js";
+  readProductionBridgeConfiguration, importPersonViaProductionBridge, resolveProductionClient } from "../api/personas/_productionOracleImport.js";
 import { createImportHandler } from "../api/personas/importar.js";
 import { createBridgeHandler } from "../scripts/oracleBridge.js";
 import { createLocalPersonLookupHandler } from "../scripts/localPersonLookup.js";
+import { createOfficePersonApiServer } from "../scripts/officePersonApi.js";
 
 const env = { COOPYA_IMPORT_TARGET: "oracle_prod",
   COOPYA_ORACLE_PROD_CONFIG: JSON.stringify({ user: "PRESTAPROD", password: "test-only-secret", connectString: "172.17.1.3:1521/orcl" }),
@@ -57,6 +59,15 @@ test("production target requires a different account than the ZIP read-only acco
     { code: "PRODUCTION_ORACLE_LOCAL_ONLY" });
   assert.throws(() => readProductionOracleConfiguration({ ...env, COOPYA_ORACLE_PROD_CONFIG: "" }),
     { code: "PRODUCTION_ORACLE_CONFIG_MISSING" });
+});
+
+test("Linux requires an absolute Instant Client path while Windows keeps the existing client", () => {
+  assert.equal(resolveProductionClient(env, "win32").clientLibrary, "oci.dll");
+  assert.throws(() => resolveProductionClient(env, "linux"), { code: "PRODUCTION_ORACLE_CLIENT_DIR_MISSING" });
+  assert.throws(() => resolveProductionClient({ COOPYA_ORACLE_CLIENT_DIR: "./instantclient" }, "linux"),
+    { code: "PRODUCTION_ORACLE_CLIENT_DIR_MISSING" });
+  assert.deepEqual(resolveProductionClient({ COOPYA_ORACLE_CLIENT_DIR: "/opt/oracle/instantclient_19_32" }, "linux"),
+    { clientDir: "/opt/oracle/instantclient_19_32", clientLibrary: "libclntsh.so" });
 });
 
 test("inserts once and checks the committed person in a second connection", async () => {
@@ -147,6 +158,36 @@ test("local acceptance selects production only after admin authentication", asyn
   assert.equal(body.diagnostics.transport, "oracle_prod");
   assert.equal(body.oracle.idPersona, 99);
   assert.deepEqual(calls, ["https://candidates.example.test/api/v1/auth/me"]);
+});
+
+test("office execution uses direct Oracle even with NODE_ENV=production", async () => {
+  let imports = 0;
+  const handler = createImportHandler({ env: { ...env, NODE_ENV: "production" }, localExecution: true,
+    logger: { info() {}, error() {} }, fetchImpl: async () => Response.json({ rol: "admin" }),
+    productionImport: async () => { imports += 1; return { confirmed: true, verified: true, idPersona: 99, operacion: "INSERCION" }; } });
+  const response = await handler(new Request("http://localhost/api/personas/importar", {
+    method: "POST", headers: { authorization: "Bearer fixture-session", "Content-Type": "application/json" },
+    body: JSON.stringify({ persona }),
+  }));
+  assert.equal(response.status, 200);
+  assert.equal(imports, 1);
+  assert.equal((await response.json()).oracle.idPersona, 99);
+});
+
+test("office API only serves person routes and never writes without admin login", async (t) => {
+  const server = createOfficePersonApiServer({ env, readiness: () => ({ ready: true }) });
+  server.listen(0, "127.0.0.1");
+  await once(server, "listening");
+  t.after(() => { server.closeAllConnections(); server.close(); });
+  const base = `http://127.0.0.1:${server.address().port}`;
+  const status = await fetch(`${base}/api/personas/importar`);
+  assert.match(status.headers.get("content-type"), /application\/json/);
+  assert.equal((await status.json()).transport, "oracle_prod");
+  assert.equal((await fetch(`${base}/api/personas/importar`, { method: "POST", body: "{}" })).status, 401);
+  assert.equal((await fetch(`${base}/api/personas/consultar?dni=12345678`)).status, 401);
+  assert.equal((await fetch(`${base}/other`)).status, 404);
+  assert.throws(() => createOfficePersonApiServer({ env: { ...env, COOPYA_IMPORT_TARGET: "ords" }, readiness: () => ({ ready: true }) }));
+  assert.throws(() => createOfficePersonApiServer({ env: { ...env, VERCEL: "1" }, readiness: () => ({ ready: true }) }));
 });
 
 test("local status reports missing write account without leaking credentials", async () => {

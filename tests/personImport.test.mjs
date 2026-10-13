@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { once } from "node:events";
 import { createImportHandler } from "../api/personas/importar.js";
 import { readOrdsConfiguration, prepareOrdsPerson, importPersonViaOrds } from "../api/personas/_ordsPersonImport.js";
-import { sendPersonImport } from "../src/componentes/dashboard/administrativo/personImportDiagnostics.js";
+import { createRequestId, sendPersonImport } from "../src/componentes/dashboard/administrativo/personImportDiagnostics.js";
 import { buildOraclePerson } from "../src/componentes/dashboard/administrativo/personaImportMapper.js";
 import { localPersonImportPlugin } from "../scripts/localPersonImport.js";
 import { IMPORT_SERVICE, IMPORT_VERSION } from "../shared/personImportContract.js";
@@ -32,6 +32,15 @@ function setup({ overrides = {}, result = { ok: true, oracle: verified }, status
   }));
   return { handle, post, calls, logs };
 }
+
+test("request ID generation works without crypto.randomUUID on local HTTP", () => {
+  const cryptoProvider = { getRandomValues(bytes) {
+    for (let index = 0; index < bytes.length; index += 1) bytes[index] = index;
+    return bytes;
+  } };
+  assert.equal(createRequestId(cryptoProvider), "00010203-0405-4607-8809-0a0b0c0d0e0f");
+  assert.match(createRequestId(null), /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+});
 
 test("local HTTP works only for private hosts; production needs public HTTPS", () => {
   assert.equal(readOrdsConfiguration(env).execution, "local");

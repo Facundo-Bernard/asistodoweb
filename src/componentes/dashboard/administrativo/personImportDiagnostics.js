@@ -1,5 +1,20 @@
 import { IMPORT_SERVICE, IMPORT_VERSION, isOracleConfirmed } from "../../../../shared/personImportContract.js";
 
+// getRandomValues also works when the local panel is served over plain HTTP.
+export function createRequestId(cryptoProvider = globalThis.crypto) {
+  const bytes = new Uint8Array(16);
+  if (typeof cryptoProvider?.getRandomValues === "function") {
+    cryptoProvider.getRandomValues(bytes);
+  } else {
+    // This ID only correlates diagnostics; it is never an authentication secret.
+    for (let index = 0; index < bytes.length; index += 1) bytes[index] = Math.floor(Math.random() * 256);
+  }
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
 function responseDiagnostic(response, requestId) {
   const data = response?.data;
   const fromImportService = response?.headers?.["x-import-service"] === IMPORT_SERVICE
@@ -65,7 +80,7 @@ export function preparationDiagnostic(error, stage, requestId) {
   return diagnostic;
 }
 
-export async function sendPersonImport(client, endpoint, persona, { logger = console, requestId = crypto.randomUUID() } = {}) {
+export async function sendPersonImport(client, endpoint, persona, { logger = console, requestId = createRequestId() } = {}) {
   logger.info(`[Aceptación ${requestId}] Iniciando POST ${endpoint}. Versión ${IMPORT_VERSION}.`);
   let response;
   try {

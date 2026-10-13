@@ -38,6 +38,66 @@ error visible y no modifica el registro. No se crea un préstamo ni un contrato.
 4. Ejecutar `npm run dev` y abrir `/admin/solicitudes` en la URL local.
    Reiniciar el servidor tras cambiar el `.env`.
 
+## Panel estático servido por Caddy en la oficina
+
+Un servidor de archivos estáticos no ejecuta `/api/personas/importar`: si esa
+ruta devuelve `index.html`, **Aceptar persona** no puede insertar en Oracle.
+Para conservar la web estática en Caddy, el proceso Node y Caddy deben correr
+en el **mismo equipo de la oficina**, con acceso a `172.17.1.3:1521`, Node
+22.12+ y Oracle Instant Client para el sistema operativo de ese equipo. En
+Windows se usa el cliente del ZIP; en Linux instalar Instant Client **Basic
+19c para Linux** y configurar su directorio en el cargador del sistema
+(`ldconfig`, según la distribución). Node-oracledb en Linux habilita el modo
+Thick sin `libDir`: no sirve copiar el `oci.dll` de Windows. El `.env`
+privado debe existir en ese equipo; nunca copiarlo a `dist` ni a Caddy.
+
+En el `.env` del servidor Linux, además de las variables anteriores, definir
+`COOPYA_ORACLE_CLIENT_DIR` con la **ruta absoluta** que contiene
+`libclntsh.so`, por ejemplo `/opt/oracle/instantclient_19_32`. Esa carpeta
+debe existir y ser visible en `ldconfig -p`; instalar también las dependencias
+del sistema que exige Oracle Instant Client (por ejemplo `libaio`). Comprobar
+primero desde ese Linux que puede alcanzar `172.17.1.3:1521`. No copiar el
+`.env` ni los binarios Oracle al directorio público `dist`.
+
+1. En ese equipo, desde la raíz del proyecto, instalar dependencias (`npm ci`),
+   compilar (`npm run build`) y ejecutar `npm run office:api`. Dejar este último
+   proceso activo como servicio. Se enlaza **solo** a `127.0.0.1:8788`, valida
+   la sesión administradora y usa Oracle directo; no requiere exponer 1521.
+2. En el sitio `:8083` del Caddyfile, poner las rutas API **antes** del fallback
+   de la SPA. Adaptar la ruta absoluta de `dist` al equipo real:
+
+   ```caddyfile
+   :8083 {
+       handle /api/personas/* {
+           reverse_proxy 127.0.0.1:8788
+       }
+
+       handle {
+           root * /ruta/absoluta/asistodoweb/dist
+           try_files {path} /index.html
+           file_server
+       }
+   }
+   ```
+
+   Usar `handle`, **no** `handle_path`: la API necesita recibir la ruta
+   `/api/personas/importar` completa. Si el Caddyfile actual tiene otras
+   reglas, integrarlas sin reemplazarlo a ciegas.
+3. Validar la configuración de Caddy y recargarla con el procedimiento de ese
+   servidor. `GET http://10.16.3.17:8083/api/personas/importar` debe devolver
+   **JSON** con `version: "2026-10-13.office.1"`, `transport: "oracle_prod"`
+   y `ready: true`; si devuelve HTML,
+   todavía se está sirviendo la SPA. Un `POST` sin sesión administradora debe
+   devolver HTTP 401 y no escribir nada.
+4. Abrir `/admin/solicitudes` y comprobar primero **Consultar DNI en Oracle**.
+   Solo aceptar una solicitud real después de confirmar conexión, datos y
+   política de altas; no se hace ninguna inserción durante los checks anteriores.
+
+El HTTP de `:8083` deja el token de sesión y los datos personales sin cifrar
+en la LAN. Restringir el acceso a la red confiable y usar HTTPS en Caddy antes
+de emplearlo fuera de esa red. El frontend no utiliza `crypto.randomUUID()`:
+genera identificadores de diagnóstico compatibles con HTTP local.
+
 En la rama local `codex/admin-oracle-local`, cada solicitud tiene el botón
 **Consultar DNI en Oracle**. La consulta utiliza directamente el SQL de
 `GET /personas/{dni}` del ZIP `api-oracle-coopya.zip`, adaptado a Node y protegido

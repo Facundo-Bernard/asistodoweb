@@ -7,9 +7,10 @@ import { verifyAdminSession } from "./_adminSession.js";
 import { IMPORT_SERVICE, IMPORT_VERSION, isOracleConfirmed } from "../../shared/personImportContract.js";
 
 export function createImportHandler({ env = process.env, fetchImpl = fetch, oracleImport = importPersonViaOrds,
-  productionImport = importPersonIntoProduction, bridgeImport = importPersonViaProductionBridge, logger = console } = {}) {
+  productionImport = importPersonIntoProduction, bridgeImport = importPersonViaProductionBridge,
+  localExecution = false, logger = console } = {}) {
   const target = env.COOPYA_IMPORT_TARGET === "oracle_prod" ? "oracle_prod" : "ords";
-  const hosted = env.VERCEL === "1" || Boolean(env.VERCEL_ENV) || env.NODE_ENV === "production";
+  const hosted = !localExecution && (env.VERCEL === "1" || Boolean(env.VERCEL_ENV) || env.NODE_ENV === "production");
   return async function handle(request) {
     const trace = createDiagnostics(request, env, logger);
     if (request.method === "GET") {

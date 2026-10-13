@@ -12,7 +12,7 @@ import {
   removeCandidate,
 } from "./adminApi";
 import { buildOraclePerson } from "./personaImportMapper";
-import { logImportDiagnostic, preparationDiagnostic } from "./personImportDiagnostics.js";
+import { createRequestId, logImportDiagnostic, preparationDiagnostic } from "./personImportDiagnostics.js";
 import "./ADMINISTRATIVO.css";
 
 const EMPTY_PAPERWORK = { status: "idle", error: "", url: "", type: "", filename: "" };
@@ -254,7 +254,7 @@ export default function Administrativo() {
     setAcceptanceError({ id: "", message: "" });
     setAcceptanceMessage({ id: "", message: "" });
 
-    const requestId = crypto.randomUUID();
+    const requestId = createRequestId();
     let stage = "cargar_solicitud";
     try {
       const fullCandidate = await getCandidate(candidate.id);
