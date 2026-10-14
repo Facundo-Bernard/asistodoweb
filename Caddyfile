@@ -2,19 +2,38 @@
     root * /usr/share/caddy
     encode gzip zstd
 
-    # Headers de seguridad recomendados
-    header {
-        X-Content-Type-Options "nosniff"
-        X-Frame-Options "SAMEORIGIN"
-        Referrer-Policy "strict-origin-when-cross-origin"
+    # Límite de tamaño en peticiones entrantes (mitigación de DoS / desbordamiento de memoria)
+    request_body {
+        max_size 10MB
     }
 
-    # Proxy inverso para las peticiones a la API del backend
-    # Permite que todas las PCs de la oficina se comuniquen con la API sin errores de CORS
-    handle /api/v1/* {
-        reverse_proxy {$BACKEND_URL:https://ticketera-backend-production-a834.up.railway.app} {
-            header_up Host {upstream_hostport}
-        }
+    # Bloqueo de archivos y directorios ocultos (.env, .git, etc.)
+    @hidden {
+        path */.*
+        path .*
+    }
+    respond @hidden 404
+
+    # Headers de seguridad recomendados
+    header {
+        # Ocultamiento del encabezado de identificación del servidor web
+        -Server
+
+        # Prevención de MIME-sniffing
+        X-Content-Type-Options "nosniff"
+
+        # Protección contra ataques de Clickjacking
+        X-Frame-Options "DENY"
+
+        # Control de fuga de información en la cabecera Referer
+        Referrer-Policy "strict-origin-when-cross-origin"
+
+        # Restricción de APIs sensibles del navegador
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+        # Aislamiento de procesos y políticas de origen cruzado
+        Cross-Origin-Opener-Policy "same-origin"
+        Cross-Origin-Resource-Policy "same-origin"
     }
 
     # Fallback para Single Page Application (React Router)
@@ -23,3 +42,4 @@
         file_server
     }
 }
+

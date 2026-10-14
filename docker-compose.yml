@@ -11,10 +11,49 @@ services:
     container_name: asistodo-front
     restart: unless-stopped
     ports:
-      - "8083:8083"
-    environment:
-      # URL del backend principal (Railway) al que Caddy redirigirá las peticiones
-      - BACKEND_URL=https://ticketera-backend-production-a834.up.railway.app
+      - "${PORT:-8083}:8083"
     volumes:
-      # Permite ajustar el Caddyfile en caliente sin tener que recompilar la imagen
+      # Permite ajustar el Caddyfile en caliente sin tener que recompilar la imagen (solo lectura)
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Volúmenes para datos internos y cache de Caddy
+      - caddy_data:/data
+      - caddy_config:/config
+
+    # Seguridad: prevención de escalamiento de privilegios
+    security_opt:
+      - no-new-privileges:true
+
+    # Prevención de agotamiento de disco por logs infinitos
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Monitoreo de salud del servicio para auto-recuperación
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:8083/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    # Control y límites de recursos (prevención de DoS / fuga de memoria al host)
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 512M
+        reservations:
+          memory: 128M
+
+    networks:
+      - asistodo-net
+
+networks:
+  asistodo-net:
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
