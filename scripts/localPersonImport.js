@@ -1,12 +1,21 @@
-/* global Buffer */
-import { createImportHandler } from "../api/personas/importar.js";
+﻿/* global Buffer */
 
 // Vite dev only. The same authenticated backend runs on this computer, not in React.
 export function localPersonImportPlugin(env) {
-  const handle = createImportHandler({ env });
   return {
-    name: "local-person-import", apply: "serve",
-    configureServer(server) {
+    name: "local-person-import",
+    apply: "serve",
+    async configureServer(server) {
+      let handle;
+      try {
+        const importTarget = "../api/personas/importar.js";
+        const mod = await import(/* @vite-ignore */ importTarget);
+        handle = mod.createImportHandler({ env });
+      } catch (err) {
+        console.warn("Módulo de importación local no disponible:", err.message);
+        return;
+      }
+
       server.middlewares.use(async (req, res, next) => {
         if (req.url?.split("?")[0] !== "/api/personas/importar") return next();
         const reply = (status, message) => {
@@ -22,14 +31,15 @@ export function localPersonImportPlugin(env) {
             chunks.push(chunk);
           }
           const request = new Request("http://localhost/api/personas/importar", {
-            method: req.method, headers: req.headers,
+            method: req.method,
+            headers: req.headers,
             ...(!["GET", "HEAD"].includes(req.method) ? { body: Buffer.concat(chunks) } : {}),
           });
           const response = await handle(request);
           res.writeHead(response.status, Object.fromEntries(response.headers));
           res.end(await response.text());
         } catch {
-          reply(500, "Falló el backend local de aceptación. Revisá la terminal sin compartir credenciales.");
+          reply(500, "Falló el backend local de aceptación.");
         }
       });
     },

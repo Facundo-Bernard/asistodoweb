@@ -38,8 +38,8 @@
 
     # Proxy inverso para las peticiones a la API del backend (/admin/solicitudes, auth, candidatos)
     handle /api/v1/* {
-        reverse_proxy {$BACKEND_URL:http://host.docker.internal:8085} {
-            header_up Host {$BACKEND_HOST:{upstream_hostport}}
+        reverse_proxy {$BACKEND_URL:http://ticketcoopya-caddy:8085} {
+            header_up Host {$BACKEND_HOST:ticketera.asistodo.com.ar}
             header_up Origin {$FRONTEND_URL:https://admin.asistodo.com.ar}
             header_up X-Forwarded-Proto https
             header_up X-Real-IP {remote_host}

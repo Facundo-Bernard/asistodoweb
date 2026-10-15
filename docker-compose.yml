@@ -13,10 +13,10 @@ services:
     ports:
       - "${PORT:-8083}:8083"
     environment:
-      # URL del backend (puerto 8085 por defecto). Si corre en otro contenedor o IP, se puede sobreescribir en .env
-      - BACKEND_URL=${BACKEND_URL:-http://host.docker.internal:8085}
-      # Host header opcional si el backend o Caddy del 8085 filtra por dominio (ej: ticketcoopya.asistodo.com.ar)
-      - BACKEND_HOST=${BACKEND_HOST:-}
+      # URL del backend (contenedor ticketcoopya-caddy en puerto 8085 por red compartida Docker)
+      - BACKEND_URL=${BACKEND_URL:-http://ticketcoopya-caddy:8085}
+      # Host header enviado al backend
+      - BACKEND_HOST=${BACKEND_HOST:-ticketera.asistodo.com.ar}
       # Origen exacto con protocolo para CORS en el backend
       - FRONTEND_URL=${FRONTEND_URL:-https://admin.asistodo.com.ar}
     extra_hosts:
@@ -58,10 +58,14 @@ services:
 
     networks:
       - asistodo-net
+      - asistodo_shared_net
 
 networks:
   asistodo-net:
     driver: bridge
+  asistodo_shared_net:
+    name: asistodo_shared_net
+    external: true                           # Red Docker externa compartida con ticketera-backend
 
 volumes:
   caddy_data:
