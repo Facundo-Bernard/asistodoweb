@@ -14,7 +14,7 @@ function RUTAS() {
       <Route path="/servicios" element={<SERVICIOS />} />
       <Route path="/quienes-somos" element={<QUIENESSOMOSPAGE />} />
       <Route path="/" element={<LANFINGPAGEMAIN></LANFINGPAGEMAIN>} ></Route>
-      <Route path="/bajas" element={<BAJAS/>} />
+      <Route path="/bajas" element={<BAJAS />} />
       <Route path="/adelanto" element={<ADELANTO />} />
       <Route path="/admin/solicitudes" element={<ADMINISTRATIVO />} />
     </Routes>

@@ -36,6 +36,16 @@
         Cross-Origin-Resource-Policy "same-origin"
     }
 
+    # Proxy inverso para las peticiones a la API del backend (/admin/solicitudes, auth, candidatos)
+    handle /api/v1/* {
+        reverse_proxy {$BACKEND_URL:http://host.docker.internal:8085} {
+            header_up Host {$BACKEND_HOST:{upstream_hostport}}
+            header_up Origin {$FRONTEND_URL:https://admin.asistodo.com.ar}
+            header_up X-Forwarded-Proto https
+            header_up X-Real-IP {remote_host}
+        }
+    }
+
     # Fallback para Single Page Application (React Router)
     handle {
         try_files {path} /index.html

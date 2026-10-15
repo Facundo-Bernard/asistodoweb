@@ -12,6 +12,15 @@ services:
     restart: unless-stopped
     ports:
       - "${PORT:-8083}:8083"
+    environment:
+      # URL del backend (puerto 8085 por defecto). Si corre en otro contenedor o IP, se puede sobreescribir en .env
+      - BACKEND_URL=${BACKEND_URL:-http://host.docker.internal:8085}
+      # Host header opcional si el backend o Caddy del 8085 filtra por dominio (ej: ticketcoopya.asistodo.com.ar)
+      - BACKEND_HOST=${BACKEND_HOST:-}
+      # Origen exacto con protocolo para CORS en el backend
+      - FRONTEND_URL=${FRONTEND_URL:-https://admin.asistodo.com.ar}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     volumes:
       # Permite ajustar el Caddyfile en caliente sin tener que recompilar la imagen (solo lectura)
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
