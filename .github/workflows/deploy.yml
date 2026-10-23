@@ -19,6 +19,7 @@ jobs:
           docker run --rm \
             -v "${{ github.workspace }}:/app" \
             -w /app \
+            -e VITE_API_BASE_URL="" \
             node:22-alpine \
             sh -c "npm ci && npm run build"
 

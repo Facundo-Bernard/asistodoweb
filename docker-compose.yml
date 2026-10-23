@@ -1,13 +1,6 @@
 services:
   asistodo-web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        # VITE_API_BASE_URL vacío hace que el navegador use URLs relativas (/api/v1/...)
-        # las cuales son capturadas por Caddy y redirigidas al backend en BACKEND_URL,
-        # evitando cualquier problema de CORS en las PCs de la oficina.
-        VITE_API_BASE_URL: ""
+    image: caddy:2-alpine
     container_name: asistodo-front
     restart: unless-stopped
     ports:
@@ -22,8 +15,10 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      # Permite ajustar el Caddyfile en caliente sin tener que recompilar la imagen (solo lectura)
+      # Permite ajustar el Caddyfile en caliente (solo lectura)
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Servir los archivos compilados por el contenedor efímero (solo lectura)
+      - ./dist:/usr/share/caddy:ro
       # Volúmenes para datos internos y cache de Caddy
       - caddy_data:/data
       - caddy_config:/config
