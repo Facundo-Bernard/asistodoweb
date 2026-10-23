@@ -1,0 +1,27 @@
+name: Deploy Asistodo Web Frontend
+
+on:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: 📥 Clonar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: 🏗️ Compilar Frontend con Contenedor Efímero (Node 22)
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/app" \
+            -w /app \
+            node:22-alpine \
+            sh -c "npm ci && npm run build"
+
+      - name: 🚀 Iniciar o Recargar Contenedor Caddy
+        run: |
+          docker compose up -d --remove-orphans

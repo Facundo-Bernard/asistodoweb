@@ -13,8 +13,8 @@ services:
     ports:
       - "${PORT:-8083}:8083"
     environment:
-      # URL del backend (contenedor ticketcoopya-caddy en puerto 8085 por red compartida Docker)
-      - BACKEND_URL=${BACKEND_URL:-http://ticketcoopya-caddy:8085}
+      # URL del backend (contenedor ticketcoopya-backend en puerto 8085 por red compartida Docker)
+      - BACKEND_URL=${BACKEND_URL:-http://ticketcoopya-backend:8085}
       # Host header enviado al backend
       - BACKEND_HOST=${BACKEND_HOST:-ticketera.asistodo.com.ar}
       # Origen exacto con protocolo para CORS en el backend
